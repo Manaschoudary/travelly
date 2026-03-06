@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useTravellyStore } from "@/store/travel-store";
+import AirportCombobox from "./AirportCombobox";
 
 interface FlightSearchFormProps {
   onSearch: (params: {
@@ -93,12 +94,10 @@ export default function FlightSearchForm({ onSearch, loading }: FlightSearchForm
           <Label className="text-white/70 text-sm flex items-center gap-1.5">
             <Plane className="w-3.5 h-3.5 rotate-[-45deg]" /> From
           </Label>
-          <Input
+          <AirportCombobox
             value={flightSearch.origin || ""}
-            onChange={(e) => setFlightSearch({ origin: e.target.value.toUpperCase() })}
-            placeholder="DEL"
-            maxLength={3}
-            className="h-12 bg-white/10 border-white/10 text-white placeholder:text-white/40 rounded-xl focus:border-[#2EC4B6] text-center text-lg font-semibold uppercase tracking-wider"
+            onValueChange={(val) => setFlightSearch({ origin: val })}
+            placeholder="Select origin..."
           />
         </div>
 
@@ -116,12 +115,10 @@ export default function FlightSearchForm({ onSearch, loading }: FlightSearchForm
           <Label className="text-white/70 text-sm flex items-center gap-1.5">
             <Plane className="w-3.5 h-3.5 rotate-45" /> To
           </Label>
-          <Input
+          <AirportCombobox
             value={flightSearch.destination || ""}
-            onChange={(e) => setFlightSearch({ destination: e.target.value.toUpperCase() })}
-            placeholder="GOI"
-            maxLength={3}
-            className="h-12 bg-white/10 border-white/10 text-white placeholder:text-white/40 rounded-xl focus:border-[#2EC4B6] text-center text-lg font-semibold uppercase tracking-wider"
+            onValueChange={(val) => setFlightSearch({ destination: val })}
+            placeholder="Select destination..."
           />
         </div>
       </div>

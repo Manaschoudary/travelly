@@ -4,6 +4,9 @@ import { auth } from "@/lib/auth";
 import connectDB from "@/lib/db/mongoose";
 import { Trip } from "@/lib/db/models";
 
+// Allow up to 60 seconds for multi-agent trip planning
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
