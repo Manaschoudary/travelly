@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+export type TransportMode = "flight" | "train" | "drive" | "bus" | "any";
+
 export interface TripFormData {
   destination: string;
   startDate: string;
@@ -9,6 +11,10 @@ export interface TripFormData {
   travelStyle: string;
   interests: string[];
   specialRequests: string;
+  originCity: string;
+  originAirport: string;
+  transportMode: TransportMode;
+  suggestTrip: boolean;
 }
 
 interface ChatMessage {

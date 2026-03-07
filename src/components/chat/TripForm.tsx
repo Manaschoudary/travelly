@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -9,7 +9,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Palmtree,
   Mountain,
   Waves,
   Camera,
@@ -18,6 +17,14 @@ import {
   TreePine,
   Heart,
   Sun,
+  LocateFixed,
+  Loader2,
+  Plane,
+  Train,
+  Car,
+  Bus,
+  Shuffle,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +32,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useTravellyStore } from "@/store/travel-store";
+import { useTravellyStore, type TransportMode } from "@/store/travel-store";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import useGeolocation, { INDIAN_CITIES } from "@/hooks/use-geolocation";
 
 const popularDestinations = [
   "Goa", "Manali", "Bali", "Dubai", "Thailand", "Kashmir",
@@ -34,9 +42,9 @@ const popularDestinations = [
 ];
 
 const travelStyles = [
-  { value: "budget", label: "Budget", emoji: "🎒" },
-  { value: "comfort", label: "Comfort", emoji: "🏨" },
-  { value: "luxury", label: "Luxury", emoji: "💎" },
+  { value: "budget", label: "Budget", emoji: "\uD83C\uDF92" },
+  { value: "comfort", label: "Comfort", emoji: "\uD83C\uDFE8" },
+  { value: "luxury", label: "Luxury", emoji: "\uD83D\uDC8E" },
 ];
 
 const interestOptions = [
@@ -50,7 +58,14 @@ const interestOptions = [
   { value: "relaxation", label: "Relaxation", icon: Heart },
   { value: "beaches", label: "Beaches", icon: Waves },
   { value: "mountains", label: "Mountains", icon: Mountain },
-  { value: "wildlife", label: "Wildlife", icon: Palmtree },
+];
+
+const transportOptions: { value: TransportMode; label: string; icon: typeof Plane; description: string }[] = [
+  { value: "flight", label: "Flight", icon: Plane, description: "Fastest option" },
+  { value: "train", label: "Train", icon: Train, description: "Scenic & budget-friendly" },
+  { value: "drive", label: "Self Drive", icon: Car, description: "Road trip freedom" },
+  { value: "bus", label: "Bus", icon: Bus, description: "Most economical" },
+  { value: "any", label: "Suggest Best", icon: Shuffle, description: "AI picks the best" },
 ];
 
 const slideVariants = {
@@ -65,10 +80,28 @@ export default function TripForm() {
   const { tripForm, setTripForm, setCurrentStep, setAvatarState } = useTravellyStore();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
   const { theme } = useTheme();
   const light = theme === "light";
+  const geo = useGeolocation();
 
-  const totalSteps = 4;
+  const suggestMode = tripForm.suggestTrip || false;
+  const totalSteps = 5;
+
+  useEffect(() => {
+    if (geo.detectedCity && !tripForm.originCity) {
+      setTripForm({
+        originCity: geo.detectedCity.city,
+        originAirport: geo.detectedCity.iata,
+      });
+    }
+  }, [geo.detectedCity, tripForm.originCity, setTripForm]);
+
+  const filteredCities = INDIAN_CITIES.filter((c) =>
+    c.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+    c.iata.toLowerCase().includes(citySearch.toLowerCase())
+  ).slice(0, 8);
 
   const goNext = () => {
     if (step < totalSteps) {
@@ -97,6 +130,9 @@ export default function TripForm() {
     setCurrentStep("chat");
     setIsSubmitting(false);
   };
+
+  const canProceedStep1 = !!tripForm.originCity;
+  const canProceedStep2 = suggestMode || !!tripForm.destination;
 
   const formatINR = (val: number) =>
     new Intl.NumberFormat("en-IN", {
@@ -127,7 +163,7 @@ export default function TripForm() {
         <AnimatePresence mode="wait" custom={direction}>
           {step === 1 && (
             <motion.div
-              key="step1"
+              key="step1-origin"
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -137,8 +173,153 @@ export default function TripForm() {
               className="space-y-6"
             >
               <div>
-                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>Where do you want to go?</h3>
-                <p className={cn(light ? "text-gray-600" : "text-white/60")}>Pick a destination or type your dream spot</p>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>
+                  Where are you traveling from?
+                </h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>
+                  We&apos;ll estimate travel costs and suggest the best routes
+                </p>
+              </div>
+
+              <div className="relative">
+                <LocateFixed className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2EC4B6]" />
+                <Input
+                  value={tripForm.originCity || ""}
+                  onChange={(e) => {
+                    setCitySearch(e.target.value);
+                    setTripForm({ originCity: e.target.value, originAirport: "" });
+                    setShowCityDropdown(true);
+                  }}
+                  onFocus={() => setShowCityDropdown(true)}
+                  placeholder="e.g., Mumbai, Delhi, Bangalore..."
+                  className={cn("h-14 pl-12 pr-32 text-lg rounded-xl focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20", light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40")}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => geo.detect()}
+                  disabled={geo.loading}
+                  className={cn("absolute right-2 top-1/2 -translate-y-1/2 rounded-full text-xs gap-1.5", light ? "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100" : "bg-white/10 border-white/10 text-white/70 hover:bg-white/20")}
+                >
+                  {geo.loading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <LocateFixed className="w-3.5 h-3.5" />
+                  )}
+                  Detect
+                </Button>
+
+                {showCityDropdown && (tripForm.originCity || "").length > 0 && !tripForm.originAirport && (
+                  <div className={cn("absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-50 max-h-60 overflow-y-auto", light ? "bg-white border-gray-200" : "bg-[#1A1A2E] border-white/10")}>
+                    {filteredCities.map((city) => (
+                      <button
+                        key={city.iata}
+                        onClick={() => {
+                          setTripForm({ originCity: city.city, originAirport: city.iata });
+                          setCitySearch("");
+                          setShowCityDropdown(false);
+                        }}
+                        className={cn("w-full text-left px-4 py-3 flex items-center justify-between transition-colors", light ? "hover:bg-gray-50 text-[#1A1A2E]" : "hover:bg-white/5 text-white")}
+                      >
+                        <div>
+                          <span className="font-medium">{city.city}</span>
+                          <span className={cn("text-xs ml-2", light ? "text-gray-400" : "text-white/40")}>{city.airport}</span>
+                        </div>
+                        <Badge variant="outline" className={cn("text-[10px] font-mono", light ? "border-gray-200 text-gray-500" : "border-white/10 text-white/50")}>{city.iata}</Badge>
+                      </button>
+                    ))}
+                    {filteredCities.length === 0 && (
+                      <p className={cn("px-4 py-3 text-sm", light ? "text-gray-400" : "text-white/40")}>No cities found</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {geo.error && (
+                <p className="text-xs text-orange-400">{geo.error}</p>
+              )}
+
+              {tripForm.originAirport && (
+                <p className="text-sm text-[#2EC4B6]">
+                  Nearest airport: {tripForm.originAirport} ({tripForm.originCity})
+                </p>
+              )}
+
+              <div className="space-y-3">
+                <Label className={cn(light ? "text-gray-600" : "text-white/70")}>Preferred Transport</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {transportOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setTripForm({ transportMode: opt.value })}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
+                        tripForm.transportMode === opt.value
+                          ? "bg-[#2EC4B6]/20 border-[#2EC4B6] shadow-lg shadow-[#2EC4B6]/10"
+                          : light ? "bg-gray-50 border-gray-200 hover:bg-gray-100" : "bg-white/5 border-white/10 hover:bg-white/10"
+                      )}
+                    >
+                      <opt.icon
+                        className={cn(
+                          "w-5 h-5 shrink-0",
+                          tripForm.transportMode === opt.value ? "text-[#2EC4B6]" : light ? "text-gray-400" : "text-white/50"
+                        )}
+                      />
+                      <div>
+                        <div className={cn("text-sm font-medium", light ? "text-[#1A1A2E]" : "text-white")}>{opt.label}</div>
+                        <div className={cn("text-[10px]", light ? "text-gray-400" : "text-white/40")}>{opt.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setTripForm({ suggestTrip: !suggestMode })}
+                className={cn(
+                  "w-full flex items-center gap-3 p-4 rounded-xl border transition-all",
+                  suggestMode
+                    ? "bg-gradient-to-r from-[#FFD166]/20 to-[#FF6B35]/20 border-[#FFD166] shadow-lg"
+                    : light ? "bg-gray-50 border-gray-200 hover:bg-gray-100" : "bg-white/5 border-white/10 hover:bg-white/10"
+                )}
+              >
+                <Lightbulb className={cn("w-5 h-5 shrink-0", suggestMode ? "text-[#FFD166]" : light ? "text-gray-400" : "text-white/50")} />
+                <div className="text-left">
+                  <div className={cn("text-sm font-medium", light ? "text-[#1A1A2E]" : "text-white")}>
+                    Suggest me a trip!
+                  </div>
+                  <div className={cn("text-xs", light ? "text-gray-400" : "text-white/40")}>
+                    Don&apos;t have a destination? Let AI suggest the perfect trip for you.
+                  </div>
+                </div>
+                <div className={cn("ml-auto w-10 h-6 rounded-full p-0.5 transition-colors", suggestMode ? "bg-[#FFD166]" : light ? "bg-gray-200" : "bg-white/10")}>
+                  <div className={cn("w-5 h-5 rounded-full transition-transform", suggestMode ? "translate-x-4 bg-white" : "translate-x-0", light ? "bg-white" : "bg-white/50")} />
+                </div>
+              </button>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div
+              key="step2-dest"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <div>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>
+                  {suggestMode ? "Any preferences?" : "Where do you want to go?"}
+                </h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>
+                  {suggestMode
+                    ? "Optional — leave blank and we'll surprise you based on your budget & interests"
+                    : "Pick a destination or type your dream spot"
+                  }
+                </p>
               </div>
 
               <div className="relative">
@@ -146,7 +327,7 @@ export default function TripForm() {
                 <Input
                   value={tripForm.destination || ""}
                   onChange={(e) => setTripForm({ destination: e.target.value })}
-                  placeholder="e.g., Bali, Dubai, Goa..."
+                  placeholder={suggestMode ? "Optional — e.g., somewhere by the beach..." : "e.g., Bali, Dubai, Goa..."}
                   className={cn("h-14 pl-12 text-lg rounded-xl focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20", light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40")}
                 />
               </div>
@@ -171,12 +352,22 @@ export default function TripForm() {
                   ))}
                 </div>
               </div>
+
+              {suggestMode && (
+                <div className={cn("rounded-xl p-4 text-sm flex items-start gap-3", light ? "bg-[#FFD166]/10 text-[#1A1A2E]" : "bg-[#FFD166]/10 text-[#FFD166]")}>
+                  <Lightbulb className="w-5 h-5 shrink-0 mt-0.5" />
+                  <span>
+                    Suggest mode is on. Our AI will recommend destinations based on your budget,
+                    travel dates, interests, and transport preference from <strong>{tripForm.originCity || "your city"}</strong>.
+                  </span>
+                </div>
+              )}
             </motion.div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <motion.div
-              key="step2"
+              key="step3-dates"
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -256,9 +447,9 @@ export default function TripForm() {
             </motion.div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <motion.div
-              key="step3"
+              key="step4-budget"
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -342,9 +533,9 @@ export default function TripForm() {
             </motion.div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <motion.div
-              key="step4"
+              key="step5-interests"
               custom={direction}
               variants={slideVariants}
               initial="enter"
@@ -414,7 +605,7 @@ export default function TripForm() {
         {step < totalSteps ? (
           <Button
             onClick={goNext}
-            disabled={step === 1 && !tripForm.destination}
+            disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)}
             className="bg-gradient-to-r from-[#2EC4B6] to-[#0F4C81] text-white rounded-full px-6 shadow-lg disabled:opacity-50"
           >
             Next
@@ -431,7 +622,7 @@ export default function TripForm() {
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                Generate My Trip Plan
+                {suggestMode ? "Suggest My Trip" : "Generate My Trip Plan"}
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </>
             )}

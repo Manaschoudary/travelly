@@ -21,17 +21,29 @@ export async function POST(req: Request) {
       travelStyle,
       interests,
       specialRequests,
+      originCity,
+      originAirport,
+      transportMode,
+      suggestTrip,
     } = body;
 
-    if (!destination || !startDate || !endDate || !budget) {
+    // Destination is optional when suggestTrip is true
+    if (!startDate || !endDate || !budget) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    if (!destination && !suggestTrip) {
+      return NextResponse.json(
+        { error: "Destination is required (or enable trip suggestions)" },
+        { status: 400 }
+      );
+    }
+
     const result = await planTrip({
-      destination,
+      destination: destination || "",
       startDate,
       endDate,
       budget: Number(budget),
@@ -39,14 +51,20 @@ export async function POST(req: Request) {
       travelStyle: travelStyle || "balanced",
       interests: interests || [],
       specialRequests,
+      originCity: originCity || "",
+      originAirport: originAirport || "",
+      transportMode: transportMode || "any",
+      suggestTrip: Boolean(suggestTrip),
     });
 
     if (session?.user?.id) {
       await connectDB();
       await Trip.create({
         userId: session.user.id,
-        title: `Trip to ${destination}`,
-        destination,
+        title: suggestTrip && !destination
+          ? "Trip Suggestions"
+          : `Trip to ${destination}`,
+        destination: destination || "Suggested",
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         budget: Number(budget),

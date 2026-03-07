@@ -20,7 +20,9 @@ export default function ChatInterface() {
   const { theme } = useTheme();
   const light = theme === "light";
 
-  const initialSystemMessage = `I want to plan a trip to ${tripForm.destination || "somewhere amazing"}${tripForm.startDate ? ` from ${tripForm.startDate} to ${tripForm.endDate}` : ""}${tripForm.budget ? `. Budget: ₹${tripForm.budget}` : ""}${tripForm.travelers ? `. ${tripForm.travelers} travelers` : ""}${tripForm.travelStyle ? `. Style: ${tripForm.travelStyle}` : ""}${tripForm.interests?.length ? `. Interests: ${tripForm.interests.join(", ")}` : ""}. Please create a detailed trip plan.`;
+  const initialSystemMessage = tripForm.suggestTrip && !tripForm.destination
+    ? `I'm looking for trip suggestions! I'm based in ${tripForm.originCity || "India"}${tripForm.originAirport ? ` (${tripForm.originAirport})` : ""}. ${tripForm.transportMode && tripForm.transportMode !== "any" ? `I prefer traveling by ${tripForm.transportMode}.` : "I'm open to any transport mode."}${tripForm.startDate ? ` Travel dates: ${tripForm.startDate} to ${tripForm.endDate}.` : ""}${tripForm.budget ? ` Budget: ₹${tripForm.budget}.` : ""}${tripForm.travelers ? ` ${tripForm.travelers} travelers.` : ""}${tripForm.travelStyle ? ` Style: ${tripForm.travelStyle}.` : ""}${tripForm.interests?.length ? ` Interests: ${tripForm.interests.join(", ")}.` : ""} Please suggest some great destinations for me!`
+    : `I want to plan a trip${tripForm.originCity ? ` from ${tripForm.originCity}${tripForm.originAirport ? ` (${tripForm.originAirport})` : ""}` : ""} to ${tripForm.destination || "somewhere amazing"}${tripForm.transportMode && tripForm.transportMode !== "any" ? ` traveling by ${tripForm.transportMode}` : ""}${tripForm.startDate ? ` from ${tripForm.startDate} to ${tripForm.endDate}` : ""}${tripForm.budget ? `. Budget: ₹${tripForm.budget}` : ""}${tripForm.travelers ? `. ${tripForm.travelers} travelers` : ""}${tripForm.travelStyle ? `. Style: ${tripForm.travelStyle}` : ""}${tripForm.interests?.length ? `. Interests: ${tripForm.interests.join(", ")}` : ""}. Please create a detailed trip plan.`;
 
   const transport = useMemo(
     () =>
@@ -102,9 +104,19 @@ export default function ChatInterface() {
         className={cn("backdrop-blur-sm rounded-xl p-4 mb-4", light ? "bg-white border border-gray-200 shadow-sm" : "bg-white/5 border border-white/10")}
       >
         <div className="flex flex-wrap items-center gap-2">
+          {tripForm.originCity && (
+            <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
+              🏠 {tripForm.originCity}
+            </Badge>
+          )}
           <Badge className="bg-[#2EC4B6]/20 text-[#2EC4B6] border-[#2EC4B6]/30">
-            📍 {tripForm.destination || "Exploring"}
+            📍 {tripForm.suggestTrip && !tripForm.destination ? "Suggest a Trip" : tripForm.destination || "Exploring"}
           </Badge>
+          {tripForm.transportMode && tripForm.transportMode !== "any" && (
+            <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
+              {tripForm.transportMode === "flight" ? "✈️" : tripForm.transportMode === "train" ? "🚆" : tripForm.transportMode === "drive" ? "🚗" : "🚌"} {tripForm.transportMode}
+            </Badge>
+          )}
           {tripForm.startDate && (
             <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
               📅 {tripForm.startDate} → {tripForm.endDate}
