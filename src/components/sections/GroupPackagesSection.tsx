@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Users, Heart, Briefcase, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
-const packages = [
+interface PackageItem {
+  _id?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  emoji: string;
+  title: string;
+  tagline: string;
+  groupSize: string;
+  from: number;
+  color: string;
+  popular?: boolean;
+  inclusions: string[];
+}
+
+const fallbackPackages: PackageItem[] = [
   {
     icon: Users,
     emoji: "🎉",
@@ -73,6 +86,16 @@ export default function GroupPackagesSection() {
   const isInView = useInView(ref, { once: true });
   const { theme } = useTheme();
   const light = theme === "light";
+  const [packages, setPackages] = useState<PackageItem[]>(fallbackPackages);
+
+  useEffect(() => {
+    fetch("/api/content?type=packages")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) setPackages(json.data);
+      })
+      .catch(() => {});
+  }, []);
 
   const scrollToPlanner = () => {
     document.getElementById("trip-planner")?.scrollIntoView({ behavior: "smooth" });

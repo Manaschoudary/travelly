@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   Star,
@@ -53,7 +53,7 @@ interface UpcomingTrip {
   exclusions: string[];
 }
 
-const pastTrips: PastTrip[] = [
+const fallbackPastTrips: PastTrip[] = [
   {
     title: "Ladakh Expedition 2025",
     destination: "Leh, Ladakh",
@@ -128,7 +128,7 @@ const pastTrips: PastTrip[] = [
   },
 ];
 
-const upcomingTrips: UpcomingTrip[] = [
+const fallbackUpcomingTrips: UpcomingTrip[] = [
   {
     title: "Kashmir Valley Explorer",
     destination: "Srinagar, Kashmir",
@@ -543,6 +543,38 @@ export default function GroupTripsSection() {
   const [expandedTrip, setExpandedTrip] = useState<string | null>(null);
   const { theme } = useTheme();
   const light = theme === "light";
+  const [pastTrips, setPastTrips] = useState<PastTrip[]>(fallbackPastTrips);
+  const [upcomingTrips, setUpcomingTrips] = useState<UpcomingTrip[]>(fallbackUpcomingTrips);
+
+  useEffect(() => {
+    fetch("/api/content?type=trips&tripType=past")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) {
+          setPastTrips(json.data.map((t: Record<string, unknown>) => ({
+            ...t,
+            groupSize: typeof t.groupSize === "string" ? Number(t.groupSize) || t.groupSize : t.groupSize,
+          })));
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/content?type=trips&tripType=upcoming")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) {
+          setUpcomingTrips(json.data.map((t: Record<string, unknown>) => ({
+            ...t,
+            startDate: (t.date as string) || "",
+            groupSize: String(t.groupSize || ""),
+            itinerary: (t.itinerary as UpcomingTrip["itinerary"]) || [],
+            inclusions: (t.inclusions as string[]) || [],
+            exclusions: (t.exclusions as string[]) || [],
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleToggleItinerary = (title: string) => {
     setExpandedTrip((prev) => (prev === title ? null : title));

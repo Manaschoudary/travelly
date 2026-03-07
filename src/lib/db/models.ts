@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password?: string;
   image?: string;
   provider: "credentials" | "google";
+  role: "user" | "admin";
   preferences?: {
     travelStyle?: string[];
     budget?: "budget" | "mid-range" | "luxury";
@@ -25,6 +26,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ["credentials", "google"],
       default: "credentials",
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
     preferences: {
       travelStyle: [String],
@@ -202,3 +208,202 @@ const BookingClickSchema = new Schema<IBookingClick>({
 export const BookingClick =
   mongoose.models.BookingClick ||
   mongoose.model<IBookingClick>("BookingClick", BookingClickSchema);
+
+// ============================================================
+// Admin-managed content models
+// ============================================================
+
+// Photo Gallery
+export interface IPhoto extends Document {
+  title: string;
+  location: string;
+  category: string;
+  gradient: string;
+  span: string;
+  imageUrl?: string;
+  order: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const PhotoSchema = new Schema<IPhoto>(
+  {
+    title: { type: String, required: true },
+    location: { type: String, required: true },
+    category: { type: String, required: true },
+    gradient: { type: String, required: true },
+    span: { type: String, default: "col-span-1 row-span-1" },
+    imageUrl: { type: String },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+export const Photo =
+  mongoose.models.Photo || mongoose.model<IPhoto>("Photo", PhotoSchema);
+
+// Group Trips (past + upcoming)
+export interface IGroupTrip extends Document {
+  type: "past" | "upcoming";
+  title: string;
+  destination: string;
+  date: string;
+  duration: string;
+  groupSize: number | string;
+  gradient: string;
+  rating?: number;
+  highlights?: string[];
+  testimonial?: string;
+  attendeeName?: string;
+  price?: number;
+  originalPrice?: number;
+  spotsTotal?: number;
+  spotsLeft?: number;
+  itinerary?: { day: number; title: string; description: string }[];
+  inclusions?: string[];
+  exclusions?: string[];
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const GroupTripSchema = new Schema<IGroupTrip>(
+  {
+    type: { type: String, enum: ["past", "upcoming"], required: true },
+    title: { type: String, required: true },
+    destination: { type: String, required: true },
+    date: { type: String, required: true },
+    duration: { type: String, required: true },
+    groupSize: { type: Schema.Types.Mixed, required: true },
+    gradient: { type: String, required: true },
+    rating: { type: Number },
+    highlights: [{ type: String }],
+    testimonial: { type: String },
+    attendeeName: { type: String },
+    price: { type: Number },
+    originalPrice: { type: Number },
+    spotsTotal: { type: Number },
+    spotsLeft: { type: Number },
+    itinerary: [
+      {
+        day: { type: Number },
+        title: { type: String },
+        description: { type: String },
+      },
+    ],
+    inclusions: [{ type: String }],
+    exclusions: [{ type: String }],
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const GroupTrip =
+  mongoose.models.GroupTrip ||
+  mongoose.model<IGroupTrip>("GroupTrip", GroupTripSchema);
+
+// Testimonials / Reviews
+export interface ITestimonial extends Document {
+  name: string;
+  initials: string;
+  destination: string;
+  rating: number;
+  color: string;
+  review: string;
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const TestimonialSchema = new Schema<ITestimonial>(
+  {
+    name: { type: String, required: true },
+    initials: { type: String, required: true },
+    destination: { type: String, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    color: { type: String, required: true },
+    review: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const Testimonial =
+  mongoose.models.Testimonial ||
+  mongoose.model<ITestimonial>("Testimonial", TestimonialSchema);
+
+// Destinations
+export interface IDestination extends Document {
+  name: string;
+  tag: string;
+  emoji: string;
+  from: number;
+  rating: number;
+  gradient: string;
+  description: string;
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DestinationSchema = new Schema<IDestination>(
+  {
+    name: { type: String, required: true },
+    tag: { type: String, required: true },
+    emoji: { type: String, required: true },
+    from: { type: Number, required: true },
+    rating: { type: Number, required: true },
+    gradient: { type: String, required: true },
+    description: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const Destination =
+  mongoose.models.Destination ||
+  mongoose.model<IDestination>("Destination", DestinationSchema);
+
+// Group Packages
+export interface IGroupPackage extends Document {
+  title: string;
+  emoji: string;
+  tagline: string;
+  groupSize: string;
+  from: number;
+  color: string;
+  popular: boolean;
+  inclusions: string[];
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const GroupPackageSchema = new Schema<IGroupPackage>(
+  {
+    title: { type: String, required: true },
+    emoji: { type: String, required: true },
+    tagline: { type: String, required: true },
+    groupSize: { type: String, required: true },
+    from: { type: Number, required: true },
+    color: { type: String, required: true },
+    popular: { type: Boolean, default: false },
+    inclusions: [{ type: String }],
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+export const GroupPackage =
+  mongoose.models.GroupPackage ||
+  mongoose.model<IGroupPackage>("GroupPackage", GroupPackageSchema);

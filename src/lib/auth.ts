@@ -64,6 +64,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const dbUser = await User.findOne({ email: user.email }).lean();
         if (dbUser) {
           token.id = dbUser._id.toString();
+          token.role = dbUser.role || "user";
         }
       }
       return token;
@@ -71,6 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token?.id) {
         session.user.id = token.id as string;
+        session.user.role = (token.role as string) || "user";
       }
       return session;
     },

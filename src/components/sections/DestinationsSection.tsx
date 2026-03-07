@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,18 @@ import { cn } from "@/lib/utils";
 import { useTravellyStore } from "@/store/travel-store";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
-const destinations = [
+interface DestinationItem {
+  _id?: string;
+  name: string;
+  tag: string;
+  emoji: string;
+  from: number;
+  rating: number;
+  gradient: string;
+  description: string;
+}
+
+const fallbackDestinations: DestinationItem[] = [
   {
     name: "Goa",
     tag: "Beach",
@@ -96,6 +107,16 @@ export default function DestinationsSection() {
   const setTripForm = useTravellyStore((s) => s.setTripForm);
   const { theme } = useTheme();
   const light = theme === "light";
+  const [destinations, setDestinations] = useState<DestinationItem[]>(fallbackDestinations);
+
+  useEffect(() => {
+    fetch("/api/content?type=destinations")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) setDestinations(json.data);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleClick = (name: string) => {
     setTripForm({ destination: name });

@@ -1,12 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 
-const photos = [
+interface Photo {
+  _id?: string;
+  title: string;
+  location: string;
+  category: string;
+  gradient: string;
+  span: string;
+}
+
+const fallbackPhotos: Photo[] = [
   {
     title: "Golden Hour at Taj Mahal",
     location: "Agra, India",
@@ -84,6 +93,16 @@ export default function PhotoGallerySection() {
   const isInView = useInView(ref, { once: true });
   const { theme } = useTheme();
   const light = theme === "light";
+  const [photos, setPhotos] = useState<Photo[]>(fallbackPhotos);
+
+  useEffect(() => {
+    fetch("/api/content?type=photos")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) setPhotos(json.data);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section

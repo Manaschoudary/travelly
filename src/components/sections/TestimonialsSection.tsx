@@ -1,12 +1,22 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
-const testimonials = [
+interface TestimonialItem {
+  _id?: string;
+  name: string;
+  initials: string;
+  destination: string;
+  rating: number;
+  color: string;
+  review: string;
+}
+
+const fallbackTestimonials: TestimonialItem[] = [
   {
     name: "Priya Sharma",
     initials: "PS",
@@ -68,6 +78,16 @@ export default function TestimonialsSection() {
   const isInView = useInView(ref, { once: true });
   const { theme } = useTheme();
   const light = theme === "light";
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>(fallbackTestimonials);
+
+  useEffect(() => {
+    fetch("/api/content?type=testimonials")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data?.length) setTestimonials(json.data);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <section
