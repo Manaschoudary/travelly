@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface TripHistoryCardProps {
   trip: {
@@ -125,14 +126,16 @@ export default function TripHistoryCard({
         </div>
 
         <div className="flex items-center justify-end pt-3 border-t border-gray-50">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[#0F4C81] hover:text-[#0F4C81] hover:bg-[#0F4C81]/5 gap-1 group-hover:gap-2 transition-all"
-          >
-            View Details
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          <Link href={`/trip/${trip._id}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[#0F4C81] hover:text-[#0F4C81] hover:bg-[#0F4C81]/5 gap-1 group-hover:gap-2 transition-all"
+            >
+              View Details
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </motion.div>

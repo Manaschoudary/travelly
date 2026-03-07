@@ -35,6 +35,14 @@ interface FlightSearch {
   cabinClass: "economy" | "premium_economy" | "business" | "first";
 }
 
+interface TripPlan {
+  itinerary: string;
+  flights: string;
+  hotels: string;
+  budget: string;
+  localTips: string;
+}
+
 interface TravellyStore {
   tripForm: Partial<TripFormData>;
   setTripForm: (data: Partial<TripFormData>) => void;
@@ -60,6 +68,14 @@ interface TravellyStore {
 
   activeSection: string;
   setActiveSection: (section: string) => void;
+
+  chatSessionId: string | null;
+  setChatSessionId: (id: string | null) => void;
+
+  savedTripId: string | null;
+  setSavedTripId: (id: string | null) => void;
+  currentPlan: TripPlan | null;
+  setCurrentPlan: (plan: TripPlan | null) => void;
 }
 
 export const useTravellyStore = create<TravellyStore>((set) => ({
@@ -88,4 +104,12 @@ export const useTravellyStore = create<TravellyStore>((set) => ({
 
   activeSection: "hero",
   setActiveSection: (section) => set({ activeSection: section }),
+
+  chatSessionId: null,
+  setChatSessionId: (chatSessionId) => set({ chatSessionId }),
+
+  savedTripId: null,
+  setSavedTripId: (savedTripId) => set({ savedTripId }),
+  currentPlan: null,
+  setCurrentPlan: (currentPlan) => set({ currentPlan }),
 }));

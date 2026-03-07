@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 
     if (session?.user?.id) {
       await connectDB();
-      await Trip.create({
+      const trip = await Trip.create({
         userId: session.user.id,
         title: suggestTrip && !destination
           ? "Trip Suggestions"
@@ -71,7 +71,13 @@ export async function POST(req: Request) {
         travelers: Number(travelers) || 1,
         status: "planning",
         totalEstimatedCost: Number(budget),
+        originCity: originCity || undefined,
+        originAirport: originAirport || undefined,
+        transportMode: transportMode || undefined,
+        planContent: result,
       });
+
+      return NextResponse.json({ ...result, tripId: trip._id });
     }
 
     return NextResponse.json(result);

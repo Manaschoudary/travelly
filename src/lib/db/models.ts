@@ -58,6 +58,9 @@ export interface ITrip extends Document {
   currency: string;
   travelers: number;
   status: "planning" | "booked" | "completed" | "cancelled";
+  originCity?: string;
+  originAirport?: string;
+  transportMode?: string;
   itinerary: {
     day: number;
     date: string;
@@ -71,6 +74,14 @@ export interface ITrip extends Document {
       bookingPlatform?: string;
     }[];
   }[];
+  planContent?: {
+    itinerary: string;
+    flights: string;
+    hotels: string;
+    budget: string;
+    localTips: string;
+  };
+  shareToken?: string;
   totalEstimatedCost: number;
   createdAt: Date;
   updatedAt: Date;
@@ -91,6 +102,9 @@ const TripSchema = new Schema<ITrip>(
       enum: ["planning", "booked", "completed", "cancelled"],
       default: "planning",
     },
+    originCity: { type: String },
+    originAirport: { type: String },
+    transportMode: { type: String },
     itinerary: [
       {
         day: Number,
@@ -111,6 +125,14 @@ const TripSchema = new Schema<ITrip>(
         ],
       },
     ],
+    planContent: {
+      itinerary: { type: String },
+      flights: { type: String },
+      hotels: { type: String },
+      budget: { type: String },
+      localTips: { type: String },
+    },
+    shareToken: { type: String, index: true, sparse: true },
     totalEstimatedCost: { type: Number, default: 0 },
   },
   { timestamps: true }
@@ -138,6 +160,9 @@ export interface IChatSession extends Document {
     budget?: number;
     travelers?: number;
     preferences?: string[];
+    originCity?: string;
+    originAirport?: string;
+    transportMode?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -165,6 +190,9 @@ const ChatSessionSchema = new Schema<IChatSession>(
       budget: Number,
       travelers: Number,
       preferences: [String],
+      originCity: String,
+      originAirport: String,
+      transportMode: String,
     },
   },
   { timestamps: true }

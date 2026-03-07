@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Compass, Plane, Plus } from "lucide-react";
+import { Compass, Plane, Plus, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import TripHistoryCard from "@/components/dashboard/TripHistoryCard";
+import ChatHistoryCard from "@/components/dashboard/ChatHistoryCard";
 import Link from "next/link";
 
 interface DashboardClientProps {
@@ -30,9 +31,20 @@ interface Trip {
   itinerary?: { day: number }[];
 }
 
+interface ChatSessionSummary {
+  _id: string;
+  title: string;
+  destination: string;
+  lastMessage: string;
+  messageCount: number;
+  updatedAt: string;
+}
+
 export default function DashboardClient({ user }: DashboardClientProps) {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatLoading, setChatLoading] = useState(true);
 
   useEffect(() => {
     async function fetchTrips() {
@@ -48,7 +60,23 @@ export default function DashboardClient({ user }: DashboardClientProps) {
         setLoading(false);
       }
     }
+
+    async function fetchChatSessions() {
+      try {
+        const res = await fetch("/api/chat-sessions");
+        if (res.ok) {
+          const data = await res.json();
+          setChatSessions(data.sessions || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch chat sessions:", err);
+      } finally {
+        setChatLoading(false);
+      }
+    }
+
     fetchTrips();
+    fetchChatSessions();
   }, []);
 
   return (
@@ -74,7 +102,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
           <DashboardStats trips={trips} />
         </div>
 
-        <div>
+        <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900">Your Trips</h2>
             <Link href="/#trip-planner">
@@ -135,6 +163,74 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                 <TripHistoryCard
                   key={trip._id}
                   trip={trip}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-[#2EC4B6]" />
+              <h2 className="text-xl font-bold text-gray-900">
+                Chat History
+              </h2>
+            </div>
+          </div>
+
+          {chatLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl border border-gray-100 p-4 animate-pulse"
+                >
+                  <div className="h-0.5 w-full bg-gray-100 rounded mb-4" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-100 rounded w-2/3 mb-1" />
+                      <div className="h-3 bg-gray-50 rounded w-1/3" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-gray-50 rounded w-full mb-1 ml-10" />
+                  <div className="h-3 bg-gray-50 rounded w-2/3 ml-10" />
+                </div>
+              ))}
+            </div>
+          ) : chatSessions.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl border border-gray-100 p-8 text-center"
+            >
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#2EC4B6]/10 flex items-center justify-center">
+                <MessageSquare className="w-7 h-7 text-[#2EC4B6]/50" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">
+                No conversations yet
+              </h3>
+              <p className="text-gray-500 text-sm mb-4">
+                Your AI chat conversations will appear here
+              </p>
+              <Link href="/#trip-planner">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 text-[#2EC4B6] border-[#2EC4B6]/20 hover:bg-[#2EC4B6]/5"
+                >
+                  Start a Chat
+                </Button>
+              </Link>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {chatSessions.map((session, index) => (
+                <ChatHistoryCard
+                  key={session._id}
+                  session={session}
                   index={index}
                 />
               ))}

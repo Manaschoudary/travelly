@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   ExternalLink,
   Loader2,
+  Check,
+  Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,8 +44,11 @@ function renderLineInline(text: string) {
     }
     const label = match[1];
     const url = match[2];
-    const isBooking = url.includes("aviasales.com") || url.includes("hotellook.com");
-    const type = url.includes("aviasales") ? "flight" as const : "hotel" as const;
+    const isBooking =
+      url.includes("aviasales.com") || url.includes("hotellook.com");
+    const type = url.includes("aviasales")
+      ? ("flight" as const)
+      : ("hotel" as const);
 
     parts.push(
       <a
@@ -56,7 +61,11 @@ function renderLineInline(text: string) {
             fetch("/api/booking-click", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ type, platform: type === "flight" ? "aviasales" : "hotellook", affiliateLink: url }),
+              body: JSON.stringify({
+                type,
+                platform: type === "flight" ? "aviasales" : "hotellook",
+                affiliateLink: url,
+              }),
             }).catch(() => {});
           }
         }}
@@ -87,19 +96,28 @@ function ContentRenderer({ content }: { content: string }) {
       {lines.map((line, i) => {
         if (line.startsWith("**") && line.endsWith("**"))
           return (
-            <h4 key={i} className="text-white font-semibold text-base mt-4 mb-2">
+            <h4
+              key={i}
+              className="text-white font-semibold text-base mt-4 mb-2"
+            >
               {renderLineInline(line.replace(/\*\*/g, ""))}
             </h4>
           );
         if (line.startsWith("###") || line.startsWith("## "))
           return (
-            <h3 key={i} className="text-white font-bold text-lg mt-4 mb-2">
+            <h3
+              key={i}
+              className="text-white font-bold text-lg mt-4 mb-2"
+            >
               {renderLineInline(line.replace(/^#+\s/, ""))}
             </h3>
           );
         if (line.startsWith("Day") || line.match(/^Day\s\d/i))
           return (
-            <h4 key={i} className="text-[#FFD166] font-semibold text-base mt-4 mb-1">
+            <h4
+              key={i}
+              className="text-[#FFD166] font-semibold text-base mt-4 mb-1"
+            >
               {renderLineInline(line)}
             </h4>
           );
@@ -115,7 +133,7 @@ function ContentRenderer({ content }: { content: string }) {
               {renderLineInline(line.replace(/^\d+\.\s*/, ""))}
             </li>
           );
-        if (line.includes("₹"))
+        if (line.includes("\u20B9"))
           return (
             <p key={i} className="text-[#2EC4B6]">
               {renderLineInline(line)}
@@ -129,10 +147,21 @@ function ContentRenderer({ content }: { content: string }) {
 }
 
 export default function TripResults() {
-  const { tripForm, setCurrentStep, setAvatarState } = useTravellyStore();
+  const {
+    tripForm,
+    setCurrentStep,
+    setAvatarState,
+    savedTripId,
+    setSavedTripId,
+    setCurrentPlan,
+    setChatSessionId,
+  } = useTravellyStore();
   const [plan, setPlan] = useState<TripPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const generatePlan = useCallback(async () => {
     setLoading(true);
@@ -145,7 +174,12 @@ export default function TripResults() {
       });
       if (!res.ok) throw new Error("Failed to generate plan");
       const data = await res.json();
-      setPlan(data);
+      const { tripId, ...planData } = data;
+      setPlan(planData);
+      if (tripId) {
+        setSavedTripId(tripId);
+        setSaved(true);
+      }
       setAvatarState("excited");
       setTimeout(() => setAvatarState("idle"), 3000);
     } catch (err) {
@@ -154,11 +188,40 @@ export default function TripResults() {
     } finally {
       setLoading(false);
     }
-  }, [tripForm, setAvatarState]);
+  }, [tripForm, setAvatarState, setSavedTripId]);
 
   useEffect(() => {
     generatePlan();
   }, [generatePlan]);
+
+  const handleShare = async () => {
+    if (!savedTripId) return;
+    setSharing(true);
+    try {
+      const res = await fetch(`/api/trips/${savedTripId}/share`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Failed to share");
+      const data = await res.json();
+      await navigator.clipboard.writeText(data.shareUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 3000);
+    } catch {
+      await navigator.clipboard.writeText(window.location.href);
+      setShared(true);
+      setTimeout(() => setShared(false), 3000);
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleModifyInChat = () => {
+    if (plan) {
+      setCurrentPlan(plan);
+    }
+    setChatSessionId(null);
+    setCurrentStep("chat");
+  };
 
   const tabs = [
     { value: "itinerary", label: "Itinerary", icon: Calendar, emoji: "📋" },
@@ -177,26 +240,35 @@ export default function TripResults() {
           className="flex flex-col items-center justify-center py-20"
         >
           <Loader2 className="w-12 h-12 text-[#2EC4B6] animate-spin mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Planning your dream trip...</h3>
+          <h3 className="text-xl font-bold text-white mb-2">
+            Planning your dream trip...
+          </h3>
           <p className="text-white/60 text-center max-w-md">
-            Our 6 AI agents are working together to craft the perfect itinerary for{" "}
-            {tripForm.destination}
+            Our 6 AI agents are working together to craft the perfect itinerary
+            for {tripForm.destination}
           </p>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {["🗺️ Trip Planner", "✈️ Flight Agent", "🏨 Hotel Agent", "💰 Budget Agent", "🎯 Local Expert"].map(
-              (agent, i) => (
-                <motion.div
-                  key={agent}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.3 }}
+            {[
+              "🗺️ Trip Planner",
+              "✈️ Flight Agent",
+              "🏨 Hotel Agent",
+              "💰 Budget Agent",
+              "🎯 Local Expert",
+            ].map((agent, i) => (
+              <motion.div
+                key={agent}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.3 }}
+              >
+                <Badge
+                  variant="outline"
+                  className="text-white/60 border-white/10 bg-white/5"
                 >
-                  <Badge variant="outline" className="text-white/60 border-white/10 bg-white/5">
-                    {agent}
-                  </Badge>
-                </motion.div>
-              )
-            )}
+                  {agent}
+                </Badge>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -228,24 +300,56 @@ export default function TripResults() {
             <h3 className="text-2xl font-bold text-white">
               Your {tripForm.destination} Trip Plan
             </h3>
-            <p className="text-white/60">Generated by 6 specialist AI agents</p>
+            <p className="text-white/60">
+              Generated by 6 specialist AI agents
+            </p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               className="bg-white/5 border-white/10 text-white/70 hover:bg-white/10 rounded-full"
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-              }}
+              onClick={handleShare}
+              disabled={sharing || !savedTripId}
             >
-              <Share2 className="w-4 h-4 mr-1" /> Share
+              {shared ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" /> Link Copied!
+                </>
+              ) : sharing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Sharing...
+                </>
+              ) : (
+                <>
+                  {savedTripId ? (
+                    <LinkIcon className="w-4 h-4 mr-1" />
+                  ) : (
+                    <Share2 className="w-4 h-4 mr-1" />
+                  )}{" "}
+                  Share
+                </>
+              )}
             </Button>
             <Button
               size="sm"
-              className="bg-[#2EC4B6] text-white rounded-full"
+              className={cn(
+                "rounded-full",
+                saved
+                  ? "bg-[#2EC4B6]/80 text-white"
+                  : "bg-[#2EC4B6] text-white"
+              )}
+              disabled={saved}
             >
-              <Save className="w-4 h-4 mr-1" /> Save Trip
+              {saved ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" /> Saved
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-1" /> Save Trip
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -270,7 +374,9 @@ export default function TripResults() {
           {tabs.map((tab) => (
             <TabsContent key={tab.value} value={tab.value} className="mt-4">
               <Card className="bg-white/5 border-white/10 backdrop-blur-sm p-6 rounded-xl">
-                <ContentRenderer content={plan[tab.value as keyof TripPlan]} />
+                <ContentRenderer
+                  content={plan[tab.value as keyof TripPlan]}
+                />
 
                 {(tab.value === "flights" || tab.value === "hotels") && (
                   <div className="mt-6 pt-4 border-t border-white/10">
@@ -280,14 +386,18 @@ export default function TripResults() {
                         const isFlights = tab.value === "flights";
                         const url = isFlights
                           ? buildFlightLink({
-                              origin: "DEL",
+                              origin: tripForm.originAirport || "DEL",
                               destination: tripForm.destination || "GOI",
-                              departDate: tripForm.startDate || new Date().toISOString().slice(0, 10),
+                              departDate:
+                                tripForm.startDate ||
+                                new Date().toISOString().slice(0, 10),
                               returnDate: tripForm.endDate || undefined,
                             })
                           : buildHotelLink({
                               destination: tripForm.destination || "Goa",
-                              checkIn: tripForm.startDate || new Date().toISOString().slice(0, 10),
+                              checkIn:
+                                tripForm.startDate ||
+                                new Date().toISOString().slice(0, 10),
                               checkOut: tripForm.endDate || undefined,
                             });
                         fetch("/api/booking-click", {
@@ -317,14 +427,19 @@ export default function TripResults() {
       <div className="flex justify-center gap-4 mt-6">
         <Button
           variant="outline"
-          onClick={() => setCurrentStep("chat")}
+          onClick={handleModifyInChat}
           className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-full"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Modify in Chat
         </Button>
         <Button
-          onClick={() => setCurrentStep("form")}
+          onClick={() => {
+            setCurrentPlan(null);
+            setSavedTripId(null);
+            setChatSessionId(null);
+            setCurrentStep("form");
+          }}
           className="bg-gradient-to-r from-[#0F4C81] to-[#2EC4B6] text-white rounded-full"
         >
           Plan Another Trip
