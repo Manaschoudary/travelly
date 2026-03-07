@@ -6,7 +6,6 @@ import { Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTravellyStore } from "@/store/travel-store";
 import MessageBubble from "./MessageBubble";
@@ -29,6 +28,8 @@ export default function ChatInterface() {
     [tripForm]
   );
 
+  const hasSentInitial = useRef(false);
+
   const { messages, sendMessage, status } = useChat({
     transport,
     messages: [
@@ -45,6 +46,13 @@ export default function ChatInterface() {
   });
 
   const isLoading = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    if (!hasSentInitial.current) {
+      hasSentInitial.current = true;
+      sendMessage();
+    }
+  }, [sendMessage]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -112,7 +120,7 @@ export default function ChatInterface() {
         </div>
       </motion.div>
 
-      <ScrollArea className="flex-1 pr-2" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin" ref={scrollRef}>
         <div className="space-y-4 pb-4">
           {messages.map((msg) => (
             <MessageBubble
@@ -147,7 +155,7 @@ export default function ChatInterface() {
             </motion.div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="mt-4 flex gap-2">
         <Button
