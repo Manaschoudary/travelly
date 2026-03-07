@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Plane, Compass } from "lucide-react";
+import { Menu, X, Plane, Compass, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const navLinks = [
   { label: "Plan a Trip", href: "#trip-planner" },
@@ -17,6 +18,8 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const light = theme === "light";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -38,7 +41,9 @@ export default function Navbar() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-white/90 backdrop-blur-xl shadow-lg border-b border-gray-100"
+          ? light
+            ? "bg-white/90 backdrop-blur-xl shadow-lg border-b border-gray-100"
+            : "bg-[#1A1A2E]/90 backdrop-blur-xl shadow-lg border-b border-white/10"
           : "bg-transparent"
       )}
     >
@@ -52,7 +57,9 @@ export default function Navbar() {
             <span
               className={cn(
                 "text-xl font-bold tracking-tight transition-colors",
-                scrolled ? "text-[#0F4C81]" : "text-white"
+                scrolled
+                  ? light ? "text-[#0F4C81]" : "text-white"
+                  : light ? "text-[#0F4C81]" : "text-white"
               )}
             >
               Travelly
@@ -65,10 +72,12 @@ export default function Navbar() {
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/10",
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   scrolled
-                    ? "text-gray-700 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5"
-                    : "text-white/80 hover:text-white"
+                    ? light
+                      ? "text-gray-700 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                    : light ? "text-[#0F4C81]/80 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5" : "text-white/80 hover:text-white hover:bg-white/10"
                 )}
               >
                 {link.label}
@@ -77,12 +86,30 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                scrolled
+                  ? light
+                    ? "text-gray-600 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                  : light ? "text-[#0F4C81]/70 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5" : "text-white/70 hover:text-white hover:bg-white/10"
+              )}
+              aria-label={light ? "Switch to dark mode" : "Switch to light mode"}
+            >
+              {light ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
             <Link href="/auth/signin">
               <Button
                 variant="ghost"
                 className={cn(
                   "font-medium",
-                  scrolled ? "text-gray-700 hover:text-[#0F4C81]" : "text-white hover:bg-white/10"
+                  scrolled
+                    ? light
+                      ? "text-gray-700 hover:text-[#0F4C81]"
+                      : "text-white hover:bg-white/10"
+                    : light ? "text-[#0F4C81] hover:bg-[#0F4C81]/5" : "text-white hover:bg-white/10"
                 )}
               >
                 Sign In
@@ -96,15 +123,33 @@ export default function Navbar() {
             </Button>
           </div>
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={cn(
-              "md:hidden p-2 rounded-lg",
-              scrolled ? "text-gray-700" : "text-white"
-            )}
-          >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                scrolled
+                  ? light
+                    ? "text-gray-600 hover:bg-gray-100"
+                    : "text-white/70 hover:bg-white/10"
+                  : light ? "text-[#0F4C81]/70 hover:bg-[#0F4C81]/5" : "text-white/70 hover:bg-white/10"
+              )}
+              aria-label={light ? "Switch to dark mode" : "Switch to light mode"}
+            >
+              {light ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={cn(
+                "p-2 rounded-lg",
+                scrolled
+                  ? light ? "text-gray-700" : "text-white"
+                  : light ? "text-[#0F4C81]" : "text-white"
+              )}
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -114,21 +159,39 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100"
+            className={cn(
+              "md:hidden backdrop-blur-xl border-t",
+              light
+                ? "bg-white/95 border-gray-100"
+                : "bg-[#1A1A2E]/95 border-white/10"
+            )}
           >
             <div className="px-4 py-4 space-y-2">
               {navLinks.map((link) => (
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
-                  className="block w-full text-left px-4 py-3 text-gray-700 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5 rounded-lg font-medium"
+                  className={cn(
+                    "block w-full text-left px-4 py-3 rounded-lg font-medium",
+                    light
+                      ? "text-gray-700 hover:text-[#0F4C81] hover:bg-[#0F4C81]/5"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  )}
                 >
                   {link.label}
                 </button>
               ))}
-              <div className="pt-2 border-t border-gray-100 flex gap-2">
+              <div className={cn(
+                "pt-2 border-t flex gap-2",
+                light ? "border-gray-100" : "border-white/10"
+              )}>
                 <Link href="/auth/signin" className="flex-1">
-                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button variant="outline" className={cn(
+                    "w-full",
+                    !light && "border-white/20 text-white hover:bg-white/10"
+                  )}>
+                    Sign In
+                  </Button>
                 </Link>
                 <Button
                   onClick={() => scrollTo("#trip-planner")}

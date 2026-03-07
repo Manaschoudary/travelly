@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, Search, Shield, Bot, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const trustBadges = [
   { icon: Shield, label: "Free to Use" },
@@ -14,6 +15,8 @@ const trustBadges = [
 export default function CTASection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -24,7 +27,9 @@ export default function CTASection() {
       ref={ref}
       className="relative py-24 overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, #0F4C81 0%, #16213E 40%, #1A1A2E 70%, #0F4C81 100%)",
+        background: light
+          ? "linear-gradient(135deg, #0F4C81 0%, #1565A0 40%, #2EC4B6 100%)"
+          : "linear-gradient(135deg, #0F4C81 0%, #16213E 40%, #1A1A2E 70%, #0F4C81 100%)",
       }}
     >
       <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-[#2EC4B6]/10 blur-3xl" />
@@ -69,7 +74,11 @@ export default function CTASection() {
             <Button
               onClick={() => scrollTo("trip-planner")}
               size="lg"
-              className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:from-[#E05A2B] hover:to-[#FF6B35] text-white rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-orange-500/25 group"
+              className={
+                light
+                  ? "bg-white text-[#0F4C81] hover:bg-white/90 rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-black/10 group"
+                  : "bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:from-[#E05A2B] hover:to-[#FF6B35] text-white rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-orange-500/25 group"
+              }
             >
               Plan My Trip
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

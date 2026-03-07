@@ -11,11 +11,14 @@ import { useTravellyStore } from "@/store/travel-store";
 import MessageBubble from "./MessageBubble";
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function ChatInterface() {
   const { tripForm, setAvatarState, setCurrentStep } = useTravellyStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   const initialSystemMessage = `I want to plan a trip to ${tripForm.destination || "somewhere amazing"}${tripForm.startDate ? ` from ${tripForm.startDate} to ${tripForm.endDate}` : ""}${tripForm.budget ? `. Budget: ₹${tripForm.budget}` : ""}${tripForm.travelers ? `. ${tripForm.travelers} travelers` : ""}${tripForm.travelStyle ? `. Style: ${tripForm.travelStyle}` : ""}${tripForm.interests?.length ? `. Interests: ${tripForm.interests.join(", ")}` : ""}. Please create a detailed trip plan.`;
 
@@ -96,24 +99,24 @@ export default function ChatInterface() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-4"
+        className={cn("backdrop-blur-sm rounded-xl p-4 mb-4", light ? "bg-white border border-gray-200 shadow-sm" : "bg-white/5 border border-white/10")}
       >
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-[#2EC4B6]/20 text-[#2EC4B6] border-[#2EC4B6]/30">
             📍 {tripForm.destination || "Exploring"}
           </Badge>
           {tripForm.startDate && (
-            <Badge variant="outline" className="text-white/60 border-white/10">
+            <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
               📅 {tripForm.startDate} → {tripForm.endDate}
             </Badge>
           )}
           {tripForm.budget && (
-            <Badge variant="outline" className="text-white/60 border-white/10">
+            <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
               💰 {formatINR(tripForm.budget)}
             </Badge>
           )}
           {tripForm.travelers && (
-            <Badge variant="outline" className="text-white/60 border-white/10">
+            <Badge variant="outline" className={cn(light ? "text-gray-600 border-gray-200" : "text-white/60 border-white/10")}>
               👥 {tripForm.travelers} travelers
             </Badge>
           )}
@@ -137,10 +140,10 @@ export default function ChatInterface() {
               animate={{ opacity: 1 }}
               className="flex items-center gap-3"
             >
-              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", light ? "bg-gray-100 border border-gray-200" : "bg-white/10 border border-white/10")}>
                 <Loader2 className="w-4 h-4 text-[#2EC4B6] animate-spin" />
               </div>
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3">
+              <div className={cn("backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3", light ? "bg-gray-100 border border-gray-200" : "bg-white/10 border border-white/10")}>
                 <div className="flex gap-1.5">
                   {[0, 1, 2].map((i) => (
                     <motion.div
@@ -161,7 +164,7 @@ export default function ChatInterface() {
         <Button
           variant="outline"
           onClick={() => setCurrentStep("form")}
-          className="bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white rounded-xl"
+          className={cn("rounded-xl", light ? "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white")}
         >
           ← Modify
         </Button>
@@ -171,8 +174,9 @@ export default function ChatInterface() {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Ask anything about your trip..."
             className={cn(
-              "flex-1 h-12 bg-white/10 border-white/10 text-white placeholder:text-white/40 rounded-xl",
-              "focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20"
+              "flex-1 h-12 rounded-xl",
+              "focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20",
+              light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40"
             )}
           />
           <Button

@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface Airport {
   code: string;
@@ -41,6 +42,8 @@ export default function AirportCombobox({
   const [loading, setLoading] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   const fetchAirports = useCallback(async (query: string) => {
     if (query.length < 2) {
@@ -92,46 +95,47 @@ export default function AirportCombobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "h-12 w-full justify-between bg-white/10 border-white/10 text-white rounded-xl hover:bg-white/15 hover:text-white",
+            "h-12 w-full justify-between rounded-xl",
+            light ? "bg-white border-gray-300 text-[#1A1A2E] hover:bg-gray-50 hover:text-[#1A1A2E]" : "bg-white/10 border-white/10 text-white hover:bg-white/15 hover:text-white",
             open && "border-[#2EC4B6]",
-            !value && "text-white/40"
+            !value && (light ? "text-gray-400" : "text-white/40")
           )}
         >
           <span className="truncate">
             {selectedLabel || placeholder}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-white/40" />
+          <ChevronsUpDown className={cn("ml-2 h-4 w-4 shrink-0", light ? "text-gray-400" : "text-white/40")} />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] bg-[#1A1A2E] border-white/10 p-0"
+        className={cn("w-[var(--radix-popover-trigger-width)] p-0", light ? "bg-white border-gray-200" : "bg-[#1A1A2E] border-white/10")}
         align="start"
       >
         <Command className="bg-transparent" shouldFilter={false}>
           <CommandInput
             placeholder="Type city, airport, or code..."
-            className="text-white placeholder:text-white/40"
+            className={cn(light ? "text-[#1A1A2E] placeholder:text-gray-400" : "text-white placeholder:text-white/40")}
             value={search}
             onValueChange={setSearch}
           />
           <CommandList>
             {loading && (
               <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-4 w-4 animate-spin text-white/40" />
+                <Loader2 className={cn("h-4 w-4 animate-spin", light ? "text-gray-400" : "text-white/40")} />
               </div>
             )}
             {!loading && search.length >= 2 && airports.length === 0 && (
-              <CommandEmpty className="text-white/50 py-6 text-center text-sm">
+              <CommandEmpty className={cn("py-6 text-center text-sm", light ? "text-gray-500" : "text-white/50")}>
                 No airports found.
               </CommandEmpty>
             )}
             {!loading && search.length < 2 && (
-              <div className="py-6 text-center text-sm text-white/40">
+              <div className={cn("py-6 text-center text-sm", light ? "text-gray-400" : "text-white/40")}>
                 Type at least 2 characters to search
               </div>
             )}
             {!loading && airports.length > 0 && (
-              <CommandGroup className="[&_[cmdk-group-heading]]:text-white/40">
+              <CommandGroup className={cn(light ? "[&_[cmdk-group-heading]]:text-gray-400" : "[&_[cmdk-group-heading]]:text-white/40")}>
                 {airports.map((airport) => (
                   <CommandItem
                     key={airport.code}
@@ -142,7 +146,7 @@ export default function AirportCombobox({
                       setOpen(false);
                       setSearch("");
                     }}
-                    className="text-white/80 data-[selected=true]:bg-white/10 data-[selected=true]:text-white cursor-pointer"
+                    className={cn("cursor-pointer", light ? "text-gray-700 data-[selected=true]:bg-gray-100 data-[selected=true]:text-[#1A1A2E]" : "text-white/80 data-[selected=true]:bg-white/10 data-[selected=true]:text-white")}
                   >
                     <Check
                       className={cn(
@@ -153,9 +157,9 @@ export default function AirportCombobox({
                     <div className="flex flex-col">
                       <span>
                         <span className="font-semibold">{airport.code}</span>
-                        <span className="text-white/60"> — {airport.name}</span>
+                        <span className={cn(light ? "text-gray-500" : "text-white/60")}> — {airport.name}</span>
                       </span>
-                      <span className="text-xs text-white/40">
+                      <span className={cn("text-xs", light ? "text-gray-400" : "text-white/40")}>
                         {airport.country}
                       </span>
                     </div>

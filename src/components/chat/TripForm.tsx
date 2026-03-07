@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useTravellyStore } from "@/store/travel-store";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const popularDestinations = [
   "Goa", "Manali", "Bali", "Dubai", "Thailand", "Kashmir",
@@ -64,6 +65,8 @@ export default function TripForm() {
   const { tripForm, setTripForm, setCurrentStep, setAvatarState } = useTravellyStore();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   const totalSteps = 4;
 
@@ -110,12 +113,12 @@ export default function TripForm() {
             <div
               className={cn(
                 "h-2 flex-1 rounded-full transition-all duration-500",
-                i < step ? "bg-gradient-to-r from-[#FF6B35] to-[#FFD166]" : "bg-white/10"
+                i < step ? "bg-gradient-to-r from-[#FF6B35] to-[#FFD166]" : light ? "bg-gray-200" : "bg-white/10"
               )}
             />
           </div>
         ))}
-        <span className="text-white/50 text-sm ml-2">
+        <span className={cn("text-sm ml-2", light ? "text-gray-500" : "text-white/50")}>
           {step}/{totalSteps}
         </span>
       </div>
@@ -134,8 +137,8 @@ export default function TripForm() {
               className="space-y-6"
             >
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Where do you want to go?</h3>
-                <p className="text-white/60">Pick a destination or type your dream spot</p>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>Where do you want to go?</h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>Pick a destination or type your dream spot</p>
               </div>
 
               <div className="relative">
@@ -144,12 +147,12 @@ export default function TripForm() {
                   value={tripForm.destination || ""}
                   onChange={(e) => setTripForm({ destination: e.target.value })}
                   placeholder="e.g., Bali, Dubai, Goa..."
-                  className="h-14 pl-12 bg-white/10 border-white/10 text-white placeholder:text-white/40 text-lg rounded-xl focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20"
+                  className={cn("h-14 pl-12 text-lg rounded-xl focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20", light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40")}
                 />
               </div>
 
               <div>
-                <Label className="text-white/70 text-sm mb-3 block">Popular picks</Label>
+                <Label className={cn("text-sm mb-3 block", light ? "text-gray-600" : "text-white/70")}>Popular picks</Label>
                 <div className="flex flex-wrap gap-2">
                   {popularDestinations.map((dest) => (
                     <Badge
@@ -159,7 +162,7 @@ export default function TripForm() {
                         "cursor-pointer px-4 py-2 rounded-full text-sm transition-all",
                         tripForm.destination === dest
                           ? "bg-[#2EC4B6] text-white border-[#2EC4B6] shadow-lg shadow-[#2EC4B6]/25"
-                          : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
+                          : light ? "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
                       )}
                       onClick={() => setTripForm({ destination: dest })}
                     >
@@ -183,13 +186,13 @@ export default function TripForm() {
               className="space-y-6"
             >
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2">When are you traveling?</h3>
-                <p className="text-white/60">Select your travel dates</p>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>When are you traveling?</h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>Select your travel dates</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-white/70 flex items-center gap-2">
+                  <Label className={cn("flex items-center gap-2", light ? "text-gray-600" : "text-white/70")}>
                     <Calendar className="w-4 h-4" /> Start Date
                   </Label>
                   <Input
@@ -197,11 +200,11 @@ export default function TripForm() {
                     value={tripForm.startDate || ""}
                     onChange={(e) => setTripForm({ startDate: e.target.value })}
                     min={new Date().toISOString().split("T")[0]}
-                    className="h-12 bg-white/10 border-white/10 text-white rounded-xl focus:border-[#2EC4B6] [color-scheme:dark]"
+                    className={cn("h-12 rounded-xl focus:border-[#2EC4B6]", light ? "bg-white border-gray-300 text-[#1A1A2E]" : "bg-white/10 border-white/10 text-white [color-scheme:dark]")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white/70 flex items-center gap-2">
+                  <Label className={cn("flex items-center gap-2", light ? "text-gray-600" : "text-white/70")}>
                     <Calendar className="w-4 h-4" /> End Date
                   </Label>
                   <Input
@@ -209,13 +212,13 @@ export default function TripForm() {
                     value={tripForm.endDate || ""}
                     onChange={(e) => setTripForm({ endDate: e.target.value })}
                     min={tripForm.startDate || new Date().toISOString().split("T")[0]}
-                    className="h-12 bg-white/10 border-white/10 text-white rounded-xl focus:border-[#2EC4B6] [color-scheme:dark]"
+                    className={cn("h-12 rounded-xl focus:border-[#2EC4B6]", light ? "bg-white border-gray-300 text-[#1A1A2E]" : "bg-white/10 border-white/10 text-white [color-scheme:dark]")}
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="text-white/70 text-sm mb-3 block">Quick select</Label>
+                <Label className={cn("text-sm mb-3 block", light ? "text-gray-600" : "text-white/70")}>Quick select</Label>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: "This Weekend", days: 2 },
@@ -236,7 +239,7 @@ export default function TripForm() {
                       <Badge
                         key={option.label}
                         variant="outline"
-                        className="cursor-pointer px-4 py-2 rounded-full bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
+                        className={cn("cursor-pointer px-4 py-2 rounded-full", light ? "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white")}
                         onClick={() =>
                           setTripForm({
                             startDate: start.toISOString().split("T")[0],
@@ -265,12 +268,12 @@ export default function TripForm() {
               className="space-y-6"
             >
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Budget & Group</h3>
-                <p className="text-white/60">Help us optimize your trip</p>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>Budget & Group</h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>Help us optimize your trip</p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-white/70">Total Budget (INR)</Label>
+                <Label className={cn(light ? "text-gray-600" : "text-white/70")}>Total Budget (INR)</Label>
                 <Input
                   type="number"
                   value={tripForm.budget || ""}
@@ -278,7 +281,7 @@ export default function TripForm() {
                   placeholder="e.g., 50000"
                   min={5000}
                   step={5000}
-                  className="h-12 bg-white/10 border-white/10 text-white rounded-xl focus:border-[#2EC4B6]"
+                  className={cn("h-12 rounded-xl focus:border-[#2EC4B6]", light ? "bg-white border-gray-300 text-[#1A1A2E]" : "bg-white/10 border-white/10 text-white")}
                 />
                 {tripForm.budget && (
                   <p className="text-[#2EC4B6] text-sm">{formatINR(tripForm.budget)}</p>
@@ -286,7 +289,7 @@ export default function TripForm() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-white/70 flex items-center gap-2">
+                <Label className={cn("flex items-center gap-2", light ? "text-gray-600" : "text-white/70")}>
                   <Users className="w-4 h-4" /> Number of Travelers
                 </Label>
                 <div className="flex items-center gap-4">
@@ -296,11 +299,11 @@ export default function TripForm() {
                     onClick={() =>
                       setTripForm({ travelers: Math.max(1, (tripForm.travelers || 1) - 1) })
                     }
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/20 rounded-xl"
+                    className={cn("rounded-xl", light ? "bg-gray-50 border-gray-300 text-[#1A1A2E] hover:bg-gray-100" : "bg-white/10 border-white/10 text-white hover:bg-white/20")}
                   >
                     -
                   </Button>
-                  <span className="text-white text-2xl font-bold w-12 text-center">
+                  <span className={cn("text-2xl font-bold w-12 text-center", light ? "text-[#1A1A2E]" : "text-white")}>
                     {tripForm.travelers || 1}
                   </span>
                   <Button
@@ -309,7 +312,7 @@ export default function TripForm() {
                     onClick={() =>
                       setTripForm({ travelers: Math.min(20, (tripForm.travelers || 1) + 1) })
                     }
-                    className="bg-white/10 border-white/10 text-white hover:bg-white/20 rounded-xl"
+                    className={cn("rounded-xl", light ? "bg-gray-50 border-gray-300 text-[#1A1A2E] hover:bg-gray-100" : "bg-white/10 border-white/10 text-white hover:bg-white/20")}
                   >
                     +
                   </Button>
@@ -317,7 +320,7 @@ export default function TripForm() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-white/70">Travel Style</Label>
+                <Label className={cn(light ? "text-gray-600" : "text-white/70")}>Travel Style</Label>
                 <div className="grid grid-cols-3 gap-3">
                   {travelStyles.map((style) => (
                     <button
@@ -327,11 +330,11 @@ export default function TripForm() {
                         "p-4 rounded-xl border text-center transition-all",
                         tripForm.travelStyle === style.value
                           ? "bg-[#2EC4B6]/20 border-[#2EC4B6] shadow-lg shadow-[#2EC4B6]/10"
-                          : "bg-white/5 border-white/10 hover:bg-white/10"
+                          : light ? "bg-gray-50 border-gray-200 hover:bg-gray-100" : "bg-white/5 border-white/10 hover:bg-white/10"
                       )}
                     >
                       <div className="text-2xl mb-1">{style.emoji}</div>
-                      <div className="text-white text-sm font-medium">{style.label}</div>
+                      <div className={cn("text-sm font-medium", light ? "text-[#1A1A2E]" : "text-white")}>{style.label}</div>
                     </button>
                   ))}
                 </div>
@@ -351,8 +354,8 @@ export default function TripForm() {
               className="space-y-6"
             >
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2">What interests you?</h3>
-                <p className="text-white/60">Select all that apply</p>
+                <h3 className={cn("text-2xl font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>What interests you?</h3>
+                <p className={cn(light ? "text-gray-600" : "text-white/60")}>Select all that apply</p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -364,7 +367,7 @@ export default function TripForm() {
                       "flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
                       selectedInterests.includes(interest.value)
                         ? "bg-[#2EC4B6]/20 border-[#2EC4B6] shadow-lg"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
+                        : light ? "bg-gray-50 border-gray-200 hover:bg-gray-100" : "bg-white/5 border-white/10 hover:bg-white/10"
                     )}
                   >
                     <interest.icon
@@ -372,21 +375,21 @@ export default function TripForm() {
                         "w-5 h-5",
                         selectedInterests.includes(interest.value)
                           ? "text-[#2EC4B6]"
-                          : "text-white/50"
+                          : light ? "text-gray-400" : "text-white/50"
                       )}
                     />
-                    <span className="text-white text-sm font-medium">{interest.label}</span>
+                    <span className={cn("text-sm font-medium", light ? "text-[#1A1A2E]" : "text-white")}>{interest.label}</span>
                   </button>
                 ))}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-white/70">Special requests (optional)</Label>
+                <Label className={cn(light ? "text-gray-600" : "text-white/70")}>Special requests (optional)</Label>
                 <Textarea
                   value={tripForm.specialRequests || ""}
                   onChange={(e) => setTripForm({ specialRequests: e.target.value })}
                   placeholder="e.g., vegetarian food only, wheelchair accessible, early morning flights..."
-                  className="bg-white/10 border-white/10 text-white placeholder:text-white/40 rounded-xl resize-none min-h-[80px] focus:border-[#2EC4B6]"
+                  className={cn("rounded-xl resize-none min-h-[80px] focus:border-[#2EC4B6]", light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40")}
                 />
               </div>
             </motion.div>
@@ -399,7 +402,7 @@ export default function TripForm() {
           <Button
             onClick={goBack}
             variant="outline"
-            className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-full px-6"
+            className={cn("rounded-full px-6", light ? "bg-gray-50 border-gray-300 text-[#1A1A2E] hover:bg-gray-100" : "bg-white/5 border-white/10 text-white hover:bg-white/10")}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back

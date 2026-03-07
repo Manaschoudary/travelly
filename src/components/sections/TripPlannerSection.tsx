@@ -8,23 +8,31 @@ import TripForm from "@/components/chat/TripForm";
 import ChatInterface from "@/components/chat/ChatInterface";
 import TripResults from "@/components/chat/TripResults";
 import TravellyAvatar from "@/components/avatar/TravellyAvatar";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { cn } from "@/lib/utils";
 
 export default function TripPlannerSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
   const { currentStep, avatarState } = useTravellyStore();
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   return (
     <section
       id="trip-planner"
       ref={ref}
-      className="relative min-h-screen py-20 overflow-hidden"
-      style={{
-        background: "linear-gradient(180deg, #1A1A2E 0%, #16213E 50%, #1A1A2E 100%)",
-      }}
+      className={cn("relative min-h-screen py-20 overflow-hidden", light && "bg-[#F8F9FA]")}
+      style={!light ? { background: "linear-gradient(180deg, #1A1A2E 0%, #16213E 50%, #1A1A2E 100%)" } : undefined}
     >
-      <div className="absolute top-40 left-0 w-72 h-72 rounded-full bg-[#2EC4B6]/5 blur-3xl" />
-      <div className="absolute bottom-20 right-0 w-96 h-96 rounded-full bg-[#FF6B35]/5 blur-3xl" />
+      <div className={cn(
+        "absolute top-40 left-0 w-72 h-72 rounded-full blur-3xl",
+        light ? "bg-[#2EC4B6]/3" : "bg-[#2EC4B6]/5"
+      )} />
+      <div className={cn(
+        "absolute bottom-20 right-0 w-96 h-96 rounded-full blur-3xl",
+        light ? "bg-[#FF6B35]/3" : "bg-[#FF6B35]/5"
+      )} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -33,17 +41,28 @@ export default function TripPlannerSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-sm text-white/80 mb-4">
+          <div className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm text-sm mb-4",
+            light
+              ? "bg-[#0F4C81]/10 border border-[#0F4C81]/20 text-[#0F4C81]"
+              : "bg-white/10 border border-white/10 text-white/80"
+          )}>
             <Sparkles className="w-4 h-4 text-[#FFD166]" />
             Powered by 6 AI Agents
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className={cn(
+            "text-3xl sm:text-4xl lg:text-5xl font-bold mb-4",
+            light ? "text-[#1A1A2E]" : "text-white"
+          )}>
             Plan Your{" "}
             <span className="bg-gradient-to-r from-[#2EC4B6] to-[#FFD166] bg-clip-text text-transparent">
               Dream Trip
             </span>
           </h2>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          <p className={cn(
+            "text-lg max-w-2xl mx-auto",
+            light ? "text-gray-600" : "text-white/60"
+          )}>
             Our AI agents create personalized itineraries in seconds — flights, hotels, budget, and local tips included.
           </p>
         </motion.div>

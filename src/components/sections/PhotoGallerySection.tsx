@@ -2,8 +2,9 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { cn } from "@/lib/utils";
 
 const photos = [
   {
@@ -81,15 +82,15 @@ const photos = [
 export default function PhotoGallerySection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   return (
     <section
       id="photo-gallery"
       ref={ref}
-      className="py-20"
-      style={{
-        background: "linear-gradient(180deg, #16213E 0%, #1A1A2E 100%)",
-      }}
+      className={cn("py-20", light && "bg-[#F8F9FA]")}
+      style={!light ? { background: "linear-gradient(180deg, #16213E 0%, #1A1A2E 100%)" } : undefined}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -98,13 +99,19 @@ export default function PhotoGallerySection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className={cn(
+            "text-3xl sm:text-4xl font-bold mb-4",
+            light ? "text-[#1A1A2E]" : "text-white"
+          )}>
             Through My{" "}
             <span className="bg-gradient-to-r from-[#FFD166] to-[#FF6B35] bg-clip-text text-transparent">
               Lens
             </span>
           </h2>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
+          <p className={cn(
+            "text-lg max-w-xl mx-auto",
+            light ? "text-gray-600" : "text-white/60"
+          )}>
             Capturing the beauty of travel — one frame at a time
           </p>
         </motion.div>
@@ -133,8 +140,6 @@ export default function PhotoGallerySection() {
             </motion.div>
           ))}
         </div>
-
-
       </div>
     </section>
   );

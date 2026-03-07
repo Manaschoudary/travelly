@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Bot, User, Plane, Hotel, MapPin, DollarSign, Sparkles } from "lucide-react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface MessageBubbleProps {
   role: "user" | "assistant";
@@ -53,6 +54,8 @@ function renderContent(content: string) {
 export default function MessageBubble({ role, content, agentType }: MessageBubbleProps) {
   const agent = agentType ? agentIcons[agentType] : undefined;
   const AgentIcon = agent?.icon || Bot;
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   return (
     <motion.div
@@ -66,7 +69,7 @@ export default function MessageBubble({ role, content, agentType }: MessageBubbl
           "w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1",
           role === "user"
             ? "bg-gradient-to-br from-[#0F4C81] to-[#2EC4B6]"
-            : "bg-white/10 border border-white/10"
+            : light ? "bg-gray-100 border border-gray-200" : "bg-white/10 border border-white/10"
         )}
       >
         {role === "user" ? (
@@ -81,13 +84,13 @@ export default function MessageBubble({ role, content, agentType }: MessageBubbl
           "rounded-2xl px-4 py-3 text-sm leading-relaxed",
           role === "user"
             ? "bg-gradient-to-r from-[#0F4C81] to-[#2EC4B6] text-white rounded-tr-sm"
-            : "bg-white/10 backdrop-blur-sm border border-white/10 text-white/90 rounded-tl-sm"
+            : light ? "bg-white border border-gray-200 shadow-sm text-[#1A1A2E] rounded-tl-sm" : "bg-white/10 backdrop-blur-sm border border-white/10 text-white/90 rounded-tl-sm"
         )}
       >
         {role === "assistant" && agent && (
           <Badge
             variant="outline"
-            className="mb-2 text-xs border-white/10 bg-white/5"
+            className={cn("mb-2 text-xs", light ? "border-gray-200 bg-gray-50" : "border-white/10 bg-white/5")}
             style={{ color: agent.color }}
           >
             {agent.label}

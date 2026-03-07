@@ -6,6 +6,7 @@ import { ArrowUpDown, ExternalLink, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FlightCard, { type FlightData } from "./FlightCard";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface FlightResultsProps {
   flights: FlightData[];
@@ -17,6 +18,8 @@ type SortKey = "price" | "duration" | "departure";
 
 export default function FlightResults({ flights, loading, affiliateLink }: FlightResultsProps) {
   const [sortBy, setSortBy] = useState<SortKey>("price");
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   const sorted = [...flights].sort((a, b) => {
     if (sortBy === "price") return a.price - b.price;
@@ -30,17 +33,17 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="bg-white/5 border border-white/10 rounded-xl p-5 animate-pulse"
+            className={cn("rounded-xl p-5 animate-pulse", light ? "bg-gray-50 border border-gray-200" : "bg-white/5 border border-white/10")}
           >
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white/10" />
+              <div className={cn("w-10 h-10 rounded-lg", light ? "bg-gray-200" : "bg-white/10")} />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-white/10 rounded w-1/3" />
-                <div className="h-3 bg-white/10 rounded w-1/4" />
+                <div className={cn("h-4 rounded w-1/3", light ? "bg-gray-200" : "bg-white/10")} />
+                <div className={cn("h-3 rounded w-1/4", light ? "bg-gray-200" : "bg-white/10")} />
               </div>
               <div className="space-y-2 text-right">
-                <div className="h-5 bg-white/10 rounded w-20 ml-auto" />
-                <div className="h-8 bg-white/10 rounded w-16 ml-auto" />
+                <div className={cn("h-5 rounded w-20 ml-auto", light ? "bg-gray-200" : "bg-white/10")} />
+                <div className={cn("h-8 rounded w-16 ml-auto", light ? "bg-gray-200" : "bg-white/10")} />
               </div>
             </div>
           </div>
@@ -56,9 +59,9 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
         animate={{ opacity: 1 }}
         className="text-center py-12 mt-6"
       >
-        <Plane className="w-12 h-12 text-white/20 mx-auto mb-4" />
-        <p className="text-white/60 text-lg">No flights found</p>
-        <p className="text-white/40 text-sm mt-1">Try different dates or airports</p>
+        <Plane className={cn("w-12 h-12 mx-auto mb-4", light ? "text-gray-300" : "text-white/20")} />
+        <p className={cn("text-lg", light ? "text-gray-600" : "text-white/60")}>No flights found</p>
+        <p className={cn("text-sm mt-1", light ? "text-gray-400" : "text-white/40")}>Try different dates or airports</p>
       </motion.div>
     );
   }
@@ -66,11 +69,11 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
   return (
     <div className="mt-6 space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-white/60 text-sm">
+        <p className={cn("text-sm", light ? "text-gray-600" : "text-white/60")}>
           {flights.length} flight{flights.length !== 1 ? "s" : ""} found
         </p>
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-3.5 h-3.5 text-white/40" />
+          <ArrowUpDown className={cn("w-3.5 h-3.5", light ? "text-gray-400" : "text-white/40")} />
           {(["price", "departure", "duration"] as const).map((key) => (
             <button
               key={key}
@@ -79,7 +82,7 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
                 "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
                 sortBy === key
                   ? "bg-[#2EC4B6] text-white"
-                  : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                  : light ? "bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
               )}
             >
               {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -103,7 +106,7 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
         >
           <Button
             variant="outline"
-            className="bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white rounded-full px-6"
+            className={cn("rounded-full px-6", light ? "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white")}
             onClick={() => window.open(affiliateLink, "_blank")}
           >
             View All on Aviasales

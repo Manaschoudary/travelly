@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { MessageSquare, Bot, Settings2, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const steps = [
   {
@@ -43,9 +44,16 @@ const steps = [
 export default function HowItWorksSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   return (
-    <section id="how-it-works" ref={ref} className="py-20 bg-[#F8F9FA]">
+    <section
+      id="how-it-works"
+      ref={ref}
+      className={cn("py-20", light && "bg-[#F8F9FA]")}
+      style={!light ? { background: "linear-gradient(180deg, #1A1A2E 0%, #16213E 50%, #1A1A2E 100%)" } : undefined}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -53,20 +61,23 @@ export default function HowItWorksSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#1A1A2E] mb-4">
+          <h2 className={cn("text-3xl sm:text-4xl font-bold mb-4", light ? "text-[#1A1A2E]" : "text-white")}>
             How{" "}
             <span className="bg-gradient-to-r from-[#0F4C81] to-[#2EC4B6] bg-clip-text text-transparent">
               Travelly
             </span>{" "}
             Works
           </h2>
-          <p className="text-gray-600 text-lg max-w-xl mx-auto">
+          <p className={cn("text-lg max-w-xl mx-auto", light ? "text-gray-600" : "text-white/60")}>
             From dream to destination in 4 simple steps
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-          <div className="hidden lg:block absolute top-16 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[#2EC4B6] via-[#FFD166] to-[#0F4C81] opacity-20" />
+          <div className={cn(
+            "hidden lg:block absolute top-16 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-[#2EC4B6] via-[#FFD166] to-[#0F4C81]",
+            light ? "opacity-30" : "opacity-20"
+          )} />
 
           {steps.map((step, i) => (
             <motion.div
@@ -88,13 +99,18 @@ export default function HowItWorksSection() {
                 >
                   <step.icon className="w-7 h-7" style={{ color: step.color }} />
                 </div>
-                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center text-xs font-bold text-[#0F4C81]">
+                <div className={cn(
+                  "absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold",
+                  light
+                    ? "bg-white shadow-md text-[#0F4C81]"
+                    : "bg-white/10 border border-white/20 text-white"
+                )}>
                   {i + 1}
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-[#1A1A2E] mb-2">{step.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{step.description}</p>
+              <h3 className={cn("text-lg font-bold mb-2", light ? "text-[#1A1A2E]" : "text-white")}>{step.title}</h3>
+              <p className={cn("text-sm leading-relaxed", light ? "text-gray-500" : "text-white/50")}>{step.description}</p>
             </motion.div>
           ))}
         </div>

@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const testimonials = [
   {
@@ -22,7 +23,7 @@ const testimonials = [
     rating: 5,
     color: "#FF6B35",
     review:
-      "I was skeptical about AI trip planning, but Travelly nailed it. The itinerary was perfectly paced, and the flight deals saved us ₹15,000 per person.",
+      "I was skeptical about AI trip planning, but Travelly nailed it. The itinerary was perfectly paced, and the flight deals saved us \u20B915,000 per person.",
   },
   {
     name: "Ananya Patel",
@@ -31,7 +32,7 @@ const testimonials = [
     rating: 5,
     color: "#FFD166",
     review:
-      "Our family trip to Rajasthan was magical. The local tips from the AI — hidden restaurants, sunset spots — made it truly special. Highly recommend!",
+      "Our family trip to Rajasthan was magical. The local tips from the AI \u2014 hidden restaurants, sunset spots \u2014 made it truly special. Highly recommend!",
   },
   {
     name: "Vikram Singh",
@@ -40,7 +41,7 @@ const testimonials = [
     rating: 4.5,
     color: "#0F4C81",
     review:
-      "Used Travelly for our corporate retreat to Dubai. 20 people, complex requirements — the AI handled it like a pro. Will use again for sure.",
+      "Used Travelly for our corporate retreat to Dubai. 20 people, complex requirements \u2014 the AI handled it like a pro. Will use again for sure.",
   },
   {
     name: "Meera Nair",
@@ -58,22 +59,22 @@ const testimonials = [
     rating: 5,
     color: "#FF6B35",
     review:
-      "First international trip and I was nervous. Travelly planned everything — visa tips, local transport, even the best street food spots in Bangkok. 10/10.",
+      "First international trip and I was nervous. Travelly planned everything \u2014 visa tips, local transport, even the best street food spots in Bangkok. 10/10.",
   },
 ];
 
 export default function TestimonialsSection() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
+  const { theme } = useTheme();
+  const light = theme === "light";
 
   return (
     <section
       id="testimonials"
       ref={ref}
-      className="py-20"
-      style={{
-        background: "linear-gradient(180deg, #16213E 0%, #1A1A2E 100%)",
-      }}
+      className={cn("py-20", light && "bg-[#F8F9FA]")}
+      style={!light ? { background: "linear-gradient(180deg, #16213E 0%, #1A1A2E 100%)" } : undefined}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -82,13 +83,19 @@ export default function TestimonialsSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-14"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 className={cn(
+            "text-3xl sm:text-4xl font-bold mb-4",
+            light ? "text-[#1A1A2E]" : "text-white"
+          )}>
             What Our{" "}
             <span className="bg-gradient-to-r from-[#FFD166] to-[#FF6B35] bg-clip-text text-transparent">
               Travelers Say
             </span>
           </h2>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
+          <p className={cn(
+            "text-lg max-w-xl mx-auto",
+            light ? "text-gray-600" : "text-white/60"
+          )}>
             Real stories from real travelers who planned with Travelly
           </p>
         </motion.div>
@@ -100,7 +107,12 @@ export default function TestimonialsSection() {
               initial={{ opacity: 0, y: 25 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.1 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.08] transition-all"
+              className={cn(
+                "rounded-2xl p-6 transition-all",
+                light
+                  ? "bg-white shadow-sm border border-gray-200 hover:shadow-md"
+                  : "bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/[0.08]"
+              )}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div
@@ -110,8 +122,14 @@ export default function TestimonialsSection() {
                   {t.initials}
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm">{t.name}</p>
-                  <p className="text-white/40 text-xs">Traveled to {t.destination}</p>
+                  <p className={cn(
+                    "font-semibold text-sm",
+                    light ? "text-[#1A1A2E]" : "text-white"
+                  )}>{t.name}</p>
+                  <p className={cn(
+                    "text-xs",
+                    light ? "text-gray-400" : "text-white/40"
+                  )}>Traveled to {t.destination}</p>
                 </div>
               </div>
 
@@ -125,13 +143,16 @@ export default function TestimonialsSection() {
                         ? "text-[#FFD166] fill-[#FFD166]"
                         : t.rating % 1 !== 0 && j === Math.floor(t.rating)
                           ? "text-[#FFD166] fill-[#FFD166]/50"
-                          : "text-white/20"
+                          : light ? "text-gray-300" : "text-white/20"
                     )}
                   />
                 ))}
               </div>
 
-              <p className="text-white/70 text-sm leading-relaxed">
+              <p className={cn(
+                "text-sm leading-relaxed",
+                light ? "text-gray-600" : "text-white/70"
+              )}>
                 &ldquo;{t.review}&rdquo;
               </p>
             </motion.div>
