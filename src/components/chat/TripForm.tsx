@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { useTravellyStore, type TransportMode } from "@/store/travel-store";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import useGeolocation, { INDIAN_CITIES } from "@/hooks/use-geolocation";
+import { searchDestinations, getTypeEmoji, type Destination } from "@/lib/destinations";
 
 const popularDestinations = [
   "Goa", "Manali", "Bali", "Dubai", "Thailand", "Kashmir",
@@ -82,6 +83,9 @@ export default function TripForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [citySearch, setCitySearch] = useState("");
+  const [showDestDropdown, setShowDestDropdown] = useState(false);
+  const [destResults, setDestResults] = useState<Destination[]>([]);
+  const destDropdownRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const light = theme === "light";
   const geo = useGeolocation();
@@ -97,6 +101,33 @@ export default function TripForm() {
       });
     }
   }, [geo.detectedCity, tripForm.originCity, setTripForm]);
+
+  const handleDestSearch = useCallback((value: string) => {
+    setTripForm({ destination: value });
+    if (value.length >= 1) {
+      setDestResults(searchDestinations(value, 8));
+      setShowDestDropdown(true);
+    } else {
+      setDestResults([]);
+      setShowDestDropdown(false);
+    }
+  }, [setTripForm]);
+
+  const selectDestination = useCallback((dest: Destination) => {
+    setTripForm({ destination: dest.name });
+    setDestResults([]);
+    setShowDestDropdown(false);
+  }, [setTripForm]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) {
+        setShowDestDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredCities = INDIAN_CITIES.filter((c) =>
     c.city.toLowerCase().includes(citySearch.toLowerCase()) ||
@@ -322,14 +353,42 @@ export default function TripForm() {
                 </p>
               </div>
 
-              <div className="relative">
+              <div className="relative" ref={destDropdownRef}>
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2EC4B6]" />
                 <Input
                   value={tripForm.destination || ""}
-                  onChange={(e) => setTripForm({ destination: e.target.value })}
+                  onChange={(e) => handleDestSearch(e.target.value)}
+                  onFocus={() => {
+                    if ((tripForm.destination || "").length >= 1) {
+                      setDestResults(searchDestinations(tripForm.destination || "", 8));
+                      setShowDestDropdown(true);
+                    }
+                  }}
                   placeholder={suggestMode ? "Optional — e.g., somewhere by the beach..." : "e.g., Bali, Dubai, Goa..."}
                   className={cn("h-14 pl-12 text-lg rounded-xl focus:border-[#2EC4B6] focus:ring-[#2EC4B6]/20", light ? "bg-white border-gray-300 text-[#1A1A2E] placeholder:text-gray-400" : "bg-white/10 border-white/10 text-white placeholder:text-white/40")}
+                  autoComplete="off"
                 />
+
+                {showDestDropdown && destResults.length > 0 && (
+                  <div className={cn("absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-xl z-50 max-h-60 overflow-y-auto", light ? "bg-white border-gray-200" : "bg-[#1A1A2E] border-white/10")}>
+                    {destResults.map((dest) => (
+                      <button
+                        key={`${dest.name}-${dest.country}`}
+                        onClick={() => selectDestination(dest)}
+                        className={cn("w-full text-left px-4 py-3 flex items-center justify-between transition-colors", light ? "hover:bg-gray-50 text-[#1A1A2E]" : "hover:bg-white/5 text-white")}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-base">{getTypeEmoji(dest.type)}</span>
+                          <div>
+                            <span className="font-medium">{dest.name}</span>
+                            <span className={cn("text-xs ml-2", light ? "text-gray-400" : "text-white/40")}>{dest.country}</span>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={cn("text-[10px] capitalize", light ? "border-gray-200 text-gray-500" : "border-white/10 text-white/50")}>{dest.type}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -345,7 +404,10 @@ export default function TripForm() {
                           ? "bg-[#2EC4B6] text-white border-[#2EC4B6] shadow-lg shadow-[#2EC4B6]/25"
                           : light ? "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
                       )}
-                      onClick={() => setTripForm({ destination: dest })}
+                      onClick={() => {
+                        setTripForm({ destination: dest });
+                        setShowDestDropdown(false);
+                      }}
                     >
                       {dest}
                     </Badge>

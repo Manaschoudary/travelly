@@ -76,6 +76,9 @@ interface TravellyStore {
   setSavedTripId: (id: string | null) => void;
   currentPlan: TripPlan | null;
   setCurrentPlan: (plan: TripPlan | null) => void;
+
+  userCurrency: string;
+  setUserCurrency: (currency: string) => void;
 }
 
 export const useTravellyStore = create<TravellyStore>((set) => ({
@@ -112,4 +115,7 @@ export const useTravellyStore = create<TravellyStore>((set) => ({
   setSavedTripId: (savedTripId) => set({ savedTripId }),
   currentPlan: null,
   setCurrentPlan: (currentPlan) => set({ currentPlan }),
+
+  userCurrency: "INR",
+  setUserCurrency: (userCurrency) => set({ userCurrency }),
 }));

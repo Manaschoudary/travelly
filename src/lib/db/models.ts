@@ -83,6 +83,27 @@ export interface ITrip extends Document {
   };
   shareToken?: string;
   totalEstimatedCost: number;
+  collaborators: {
+    email: string;
+    name?: string;
+    userId?: string;
+    role: "editor" | "viewer";
+    status: "pending" | "accepted" | "declined";
+    invitedAt: Date;
+    respondedAt?: Date;
+  }[];
+  comments: {
+    userId: string;
+    userName: string;
+    section: "itinerary" | "flights" | "hotels" | "budget" | "localTips" | "general";
+    content: string;
+    createdAt: Date;
+  }[];
+  votes: {
+    userId: string;
+    section: "itinerary" | "flights" | "hotels" | "budget" | "localTips";
+    vote: "up" | "down";
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -134,6 +155,33 @@ const TripSchema = new Schema<ITrip>(
     },
     shareToken: { type: String, index: true, sparse: true },
     totalEstimatedCost: { type: Number, default: 0 },
+    collaborators: [
+      {
+        email: { type: String, required: true },
+        name: { type: String },
+        userId: { type: String },
+        role: { type: String, enum: ["editor", "viewer"], default: "editor" },
+        status: { type: String, enum: ["pending", "accepted", "declined"], default: "pending" },
+        invitedAt: { type: Date, default: Date.now },
+        respondedAt: { type: Date },
+      },
+    ],
+    comments: [
+      {
+        userId: { type: String, required: true },
+        userName: { type: String, required: true },
+        section: { type: String, enum: ["itinerary", "flights", "hotels", "budget", "localTips", "general"], default: "general" },
+        content: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    votes: [
+      {
+        userId: { type: String, required: true },
+        section: { type: String, enum: ["itinerary", "flights", "hotels", "budget", "localTips"], required: true },
+        vote: { type: String, enum: ["up", "down"], required: true },
+      },
+    ],
   },
   { timestamps: true }
 );
