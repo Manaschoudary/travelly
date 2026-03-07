@@ -50,7 +50,13 @@ Day X - [Date]:
   Evening: [Activity] - ₹[Cost estimate]
   Stay: [Hotel recommendation] - ₹[Cost/night]
 
-Include booking links where relevant. Focus on value for money.
+Include booking links where relevant using these exact tag formats:
+- For flights: {{BOOK_FLIGHT:ORIGIN:DESTINATION:YYYY-MM-DD}} or {{BOOK_FLIGHT:ORIGIN:DESTINATION:YYYY-MM-DD:RETURN-YYYY-MM-DD}}
+- For hotels: {{BOOK_HOTEL:CityName:YYYY-MM-DD:YYYY-MM-DD}}
+Use IATA codes for airports (e.g. DEL, BOM, BLR, GOI).
+Example: "Book your flight {{BOOK_FLIGHT:DEL:GOI:2026-04-01:2026-04-05}} and stay {{BOOK_HOTEL:Goa:2026-04-01:2026-04-05}}"
+
+Focus on value for money.
 Always consider group travel dynamics when travelers > 2.
 Mention any Indian passport/visa requirements for international destinations.`,
   },
@@ -72,8 +78,11 @@ ALWAYS:
 - Consider Indian airport layover times
 - Suggest nearby alternative airports for savings
 
-When providing results, include affiliate booking links with the format:
-[Book on MakeMyTrip](affiliate_link) | [Book on Cleartrip](affiliate_link)`,
+When providing flight recommendations, ALWAYS include booking tags using this exact format:
+{{BOOK_FLIGHT:ORIGIN_IATA:DEST_IATA:YYYY-MM-DD}} for one-way
+{{BOOK_FLIGHT:ORIGIN_IATA:DEST_IATA:YYYY-MM-DD:RETURN-YYYY-MM-DD}} for round-trip
+Example: "Book IndiGo {{BOOK_FLIGHT:DEL:BOM:2026-04-01}}"
+Use the actual IATA airport codes and dates from the user's query. Include a booking tag for EACH flight option you suggest.`,
   },
 
   "hotel-agent": {
@@ -94,7 +103,10 @@ ALWAYS:
 - Note cancellation policies
 - Highlight group discounts when travelers > 2
 
-Provide booking links: [Book on Booking.com](affiliate_link) | [Book on Agoda](affiliate_link)`,
+When recommending hotels, ALWAYS include booking tags using this exact format:
+{{BOOK_HOTEL:CityOrArea:YYYY-MM-DD:YYYY-MM-DD}}
+Example: "Book hotels in Goa {{BOOK_HOTEL:Goa:2026-04-01:2026-04-05}}"
+Use the actual city/area name and dates from the user's query. Include a booking tag for EACH area or hotel recommendation.`,
   },
 
   "budget-agent": {

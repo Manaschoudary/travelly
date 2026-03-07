@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Bot, User, Plane, Hotel, MapPin, DollarSign, Sparkles } from "lucide-react";
+import { Bot, User, Plane, Hotel, MapPin, DollarSign, Sparkles, ExternalLink } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface MessageBubbleProps {
@@ -22,32 +22,119 @@ const agentIcons: Record<string, { icon: typeof Bot; label: string; color: strin
   orchestrator: { icon: Bot, label: "Travelly AI", color: "#2EC4B6" },
 };
 
-function renderContent(content: string) {
-  const lines = content.split("\n");
-  return lines.map((line, i) => {
-    if (line.startsWith("**") && line.endsWith("**")) {
-      return (
-        <strong key={i} className="block font-semibold mt-2 mb-1">
-          {line.replace(/\*\*/g, "")}
-        </strong>
+const BOOKING_DOMAINS = ["aviasales.com", "hotellook.com"];
+
+function isBookingLink(url: string): boolean {
+  return BOOKING_DOMAINS.some((d) => url.includes(d));
+}
+
+function trackClick(url: string, type: "flight" | "hotel") {
+  const platform = url.includes("aviasales") ? "aviasales" : "hotellook";
+  fetch("/api/booking-click", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, platform, affiliateLink: url }),
+  }).catch(() => {});
+}
+
+function renderInlineContent(text: string, light: boolean) {
+  const mdLinkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = mdLinkRe.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(renderBoldItalic(text.slice(lastIndex, match.index), lastIndex, light));
+    }
+
+    const label = match[1];
+    const url = match[2];
+    const booking = isBookingLink(url);
+    const type = url.includes("aviasales") ? "flight" as const : "hotel" as const;
+
+    if (booking) {
+      parts.push(
+        <a
+          key={`link-${match.index}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => trackClick(url, type)}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-xs font-medium bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:from-[#FF8C61] hover:to-[#FF6B35] shadow-sm transition-all hover:shadow-md no-underline mx-0.5"
+        >
+          {type === "flight" ? <Plane className="w-3 h-3" /> : <Hotel className="w-3 h-3" />}
+          {label}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      );
+    } else {
+      parts.push(
+        <a
+          key={`link-${match.index}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "underline underline-offset-2",
+            light ? "text-[#0F4C81] hover:text-[#2EC4B6]" : "text-[#2EC4B6] hover:text-[#FFD166]"
+          )}
+        >
+          {label}
+        </a>
       );
     }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(renderBoldItalic(text.slice(lastIndex), lastIndex, light));
+  }
+
+  return parts.length > 0 ? parts : renderBoldItalic(text, 0, light);
+}
+
+function renderBoldItalic(text: string, keyOffset: number, _light: boolean) {
+  const boldRe = /\*\*([^*]+)\*\*/g;
+  const parts: React.ReactNode[] = [];
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+
+  while ((m = boldRe.exec(text)) !== null) {
+    if (m.index > lastIdx) {
+      parts.push(<span key={`t-${keyOffset}-${lastIdx}`}>{text.slice(lastIdx, m.index)}</span>);
+    }
+    parts.push(<strong key={`b-${keyOffset}-${m.index}`} className="font-semibold">{m[1]}</strong>);
+    lastIdx = m.index + m[0].length;
+  }
+
+  if (lastIdx < text.length) {
+    parts.push(<span key={`t-${keyOffset}-${lastIdx}`}>{text.slice(lastIdx)}</span>);
+  }
+
+  return parts.length > 0 ? <>{parts}</> : text;
+}
+
+function renderContent(content: string, light: boolean) {
+  const lines = content.split("\n");
+  return lines.map((line, i) => {
     if (line.startsWith("- ") || line.startsWith("• ")) {
       return (
         <li key={i} className="ml-4 list-disc">
-          {line.slice(2)}
+          {renderInlineContent(line.slice(2), light)}
         </li>
       );
     }
     if (line.match(/^\d+\./)) {
       return (
         <li key={i} className="ml-4 list-decimal">
-          {line.replace(/^\d+\.\s*/, "")}
+          {renderInlineContent(line.replace(/^\d+\.\s*/, ""), light)}
         </li>
       );
     }
     if (line.trim() === "") return <br key={i} />;
-    return <p key={i}>{line}</p>;
+    return <p key={i}>{renderInlineContent(line, light)}</p>;
   });
 }
 
@@ -96,7 +183,7 @@ export default function MessageBubble({ role, content, agentType }: MessageBubbl
             {agent.label}
           </Badge>
         )}
-        <div className="space-y-0.5">{renderContent(content)}</div>
+        <div className="space-y-0.5">{renderContent(content, light)}</div>
       </div>
     </motion.div>
   );

@@ -1,5 +1,6 @@
 import { streamText, generateText, type ModelMessage } from "ai";
 import { AGENT_CONFIGS, type AgentType } from "./config";
+import { replaceAffiliateTags } from "@/lib/affiliate";
 
 interface OrchestratorResponse {
   route: AgentType | "direct";
@@ -73,7 +74,7 @@ export async function runAgent(
     prompt,
   });
 
-  return result.text;
+  return replaceAffiliateTags(result.text);
 }
 
 export async function planTrip(tripDetails: {

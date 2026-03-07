@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useTravellyStore } from "@/store/travel-store";
+import { buildFlightLink, buildHotelLink } from "@/lib/affiliate";
 
 interface TripPlan {
   itinerary: string;
@@ -27,6 +28,56 @@ interface TripPlan {
   hotels: string;
   budget: string;
   localTips: string;
+}
+
+function renderLineInline(text: string) {
+  const mdLinkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = mdLinkRe.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const label = match[1];
+    const url = match[2];
+    const isBooking = url.includes("aviasales.com") || url.includes("hotellook.com");
+    const type = url.includes("aviasales") ? "flight" as const : "hotel" as const;
+
+    parts.push(
+      <a
+        key={`lnk-${match.index}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => {
+          if (isBooking) {
+            fetch("/api/booking-click", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type, platform: type === "flight" ? "aviasales" : "hotellook", affiliateLink: url }),
+            }).catch(() => {});
+          }
+        }}
+        className={
+          isBooking
+            ? "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-white text-xs font-medium bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] hover:brightness-110 no-underline mx-0.5"
+            : "text-[#2EC4B6] underline underline-offset-2 hover:text-[#FFD166]"
+        }
+      >
+        {label}
+        {isBooking && <ExternalLink className="w-3 h-3 inline" />}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : text;
 }
 
 function ContentRenderer({ content }: { content: string }) {
@@ -37,41 +88,41 @@ function ContentRenderer({ content }: { content: string }) {
         if (line.startsWith("**") && line.endsWith("**"))
           return (
             <h4 key={i} className="text-white font-semibold text-base mt-4 mb-2">
-              {line.replace(/\*\*/g, "")}
+              {renderLineInline(line.replace(/\*\*/g, ""))}
             </h4>
           );
         if (line.startsWith("###") || line.startsWith("## "))
           return (
             <h3 key={i} className="text-white font-bold text-lg mt-4 mb-2">
-              {line.replace(/^#+\s/, "")}
+              {renderLineInline(line.replace(/^#+\s/, ""))}
             </h3>
           );
         if (line.startsWith("Day") || line.match(/^Day\s\d/i))
           return (
             <h4 key={i} className="text-[#FFD166] font-semibold text-base mt-4 mb-1">
-              {line}
+              {renderLineInline(line)}
             </h4>
           );
         if (line.startsWith("- ") || line.startsWith("• "))
           return (
             <li key={i} className="ml-4 list-disc">
-              {line.slice(2)}
+              {renderLineInline(line.slice(2))}
             </li>
           );
         if (line.match(/^\d+\./))
           return (
             <li key={i} className="ml-4 list-decimal">
-              {line.replace(/^\d+\.\s*/, "")}
+              {renderLineInline(line.replace(/^\d+\.\s*/, ""))}
             </li>
           );
         if (line.includes("₹"))
           return (
             <p key={i} className="text-[#2EC4B6]">
-              {line}
+              {renderLineInline(line)}
             </p>
           );
         if (line.trim() === "") return <br key={i} />;
-        return <p key={i}>{line}</p>;
+        return <p key={i}>{renderLineInline(line)}</p>;
       })}
     </div>
   );
@@ -225,14 +276,32 @@ export default function TripResults() {
                   <div className="mt-6 pt-4 border-t border-white/10">
                     <Button
                       className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] text-white rounded-full shadow-lg"
-                      onClick={() =>
-                        window.open(
-                          tab.value === "flights"
-                            ? "https://www.aviasales.com"
-                            : "https://www.booking.com",
-                          "_blank"
-                        )
-                      }
+                      onClick={() => {
+                        const isFlights = tab.value === "flights";
+                        const url = isFlights
+                          ? buildFlightLink({
+                              origin: "DEL",
+                              destination: tripForm.destination || "GOI",
+                              departDate: tripForm.startDate || new Date().toISOString().slice(0, 10),
+                              returnDate: tripForm.endDate || undefined,
+                            })
+                          : buildHotelLink({
+                              destination: tripForm.destination || "Goa",
+                              checkIn: tripForm.startDate || new Date().toISOString().slice(0, 10),
+                              checkOut: tripForm.endDate || undefined,
+                            });
+                        fetch("/api/booking-click", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            type: isFlights ? "flight" : "hotel",
+                            platform: isFlights ? "aviasales" : "hotellook",
+                            affiliateLink: url,
+                            details: { destination: tripForm.destination },
+                          }),
+                        }).catch(() => {});
+                        window.open(url, "_blank");
+                      }}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Book {tab.value === "flights" ? "Flights" : "Hotels"} Now

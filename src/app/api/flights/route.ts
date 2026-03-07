@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { buildFlightLink } from "@/lib/affiliate";
 
 interface AmadeusToken {
   access_token: string;
@@ -38,25 +39,6 @@ async function getAmadeusToken(): Promise<string> {
   return cachedToken.token;
 }
 
-function generateTravelpayoutsLink(
-  origin: string,
-  destination: string,
-  departDate: string,
-  returnDate?: string
-): string {
-  const marker = process.env.TRAVELPAYOUTS_MARKER || "travelly";
-  const base = "https://www.aviasales.com/search";
-  const params = new URLSearchParams({
-    origin_iata: origin,
-    destination_iata: destination,
-    depart_date: departDate,
-    ...(returnDate && { return_date: returnDate }),
-    adults: "1",
-    marker,
-  });
-  return `${base}?${params.toString()}`;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -75,12 +57,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const affiliateLink = generateTravelpayoutsLink(
+    const affiliateLink = buildFlightLink({
       origin,
       destination,
       departDate,
-      returnDate
-    );
+      returnDate,
+      adults: passengers || 1,
+    });
 
     let flights: Record<string, unknown>[] = [];
     let apiSource = "mock";

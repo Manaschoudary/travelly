@@ -112,7 +112,22 @@ export default function FlightCard({ flight, index = 0 }: FlightCardProps) {
           <Button
             size="sm"
             className="bg-gradient-to-r from-[#FF6B35] to-[#FF8C61] text-white rounded-full px-5 shadow-lg group-hover:shadow-orange-500/20"
-            onClick={() => window.open(flight.bookingLink, "_blank")}
+            onClick={() => {
+              fetch("/api/booking-click", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "flight",
+                  platform: flight.bookingLink.includes("aviasales") ? "aviasales" : "other",
+                  affiliateLink: flight.bookingLink,
+                  details: {
+                    destination: flight.destination,
+                    provider: flight.airline,
+                  },
+                }),
+              }).catch(() => {});
+              window.open(flight.bookingLink, "_blank");
+            }}
           >
             Book
             <ExternalLink className="w-3.5 h-3.5 ml-1.5" />

@@ -107,7 +107,18 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
           <Button
             variant="outline"
             className={cn("rounded-full px-6", light ? "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-[#1A1A2E]" : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white")}
-            onClick={() => window.open(affiliateLink, "_blank")}
+            onClick={() => {
+              fetch("/api/booking-click", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "flight",
+                  platform: "aviasales",
+                  affiliateLink: affiliateLink,
+                }),
+              }).catch(() => {});
+              window.open(affiliateLink, "_blank");
+            }}
           >
             View All on Aviasales
             <ExternalLink className="w-4 h-4 ml-2" />
