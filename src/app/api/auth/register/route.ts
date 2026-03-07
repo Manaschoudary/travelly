@@ -52,9 +52,17 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
+
+    const message =
+      error instanceof Error && error.name === "MongooseServerSelectionError"
+        ? "Unable to connect to the database. Please try again later."
+        : "Something went wrong. Please try again.";
+
+    const status =
+      error instanceof Error && error.name === "MongooseServerSelectionError"
+        ? 503
+        : 500;
+
+    return NextResponse.json({ error: message }, { status });
   }
 }

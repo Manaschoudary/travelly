@@ -93,6 +93,7 @@ export default function SignUpForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (!res.ok) {
@@ -113,7 +114,11 @@ export default function SignUpForm() {
         router.push("/dashboard");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof DOMException && err.name === "TimeoutError") {
+        setError("Request timed out. Please check your connection and try again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }

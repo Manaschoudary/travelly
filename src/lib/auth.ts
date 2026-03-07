@@ -20,51 +20,65 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        await connectDB();
-        const user = await User.findOne({
-          email: credentials.email,
-        }).lean();
+        try {
+          await connectDB();
+          const user = await User.findOne({
+            email: credentials.email,
+          }).lean();
 
-        if (!user || !user.password) return null;
+          if (!user || !user.password) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+          if (!isValid) return null;
 
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
+          return {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error("Auth authorize error:", error);
+          return null;
+        }
       },
     }),
   ],
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        await connectDB();
-        const existingUser = await User.findOne({ email: user.email });
-        if (!existingUser) {
-          await User.create({
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            provider: "google",
-          });
+        try {
+          await connectDB();
+          const existingUser = await User.findOne({ email: user.email });
+          if (!existingUser) {
+            await User.create({
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              provider: "google",
+            });
+          }
+        } catch (error) {
+          console.error("Google signIn callback DB error:", error);
+          return false;
         }
       }
       return true;
     },
     async jwt({ token, user }) {
       if (user) {
-        await connectDB();
-        const dbUser = await User.findOne({ email: user.email }).lean();
-        if (dbUser) {
-          token.id = dbUser._id.toString();
-          token.role = dbUser.role || "user";
+        try {
+          await connectDB();
+          const dbUser = await User.findOne({ email: user.email }).lean();
+          if (dbUser) {
+            token.id = dbUser._id.toString();
+            token.role = dbUser.role || "user";
+          }
+        } catch (error) {
+          console.error("JWT callback DB error:", error);
         }
       }
       return token;
