@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -357,6 +357,14 @@ export default function ChatInterface() {
           )}
         >
           ← Modify
+        </Button>
+        <Button
+          onClick={() => setCurrentStep("results")}
+          disabled={isLoading}
+          className="rounded-xl bg-gradient-to-r from-[#0F4C81] to-[#2EC4B6] text-white shadow-lg hover:brightness-110 disabled:opacity-50"
+        >
+          <Sparkles className="w-4 h-4 mr-1" />
+          Generate Full Plan
         </Button>
         <form onSubmit={handleSubmit} className="flex-1 flex gap-2">
           <Input
