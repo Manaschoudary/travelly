@@ -113,14 +113,14 @@ export default function FlightResults({ flights, loading, affiliateLink }: Fligh
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   type: "flight",
-                  platform: "aviasales",
+                  platform: "makemytrip",
                   affiliateLink: affiliateLink,
                 }),
               }).catch(() => {});
               window.open(affiliateLink, "_blank");
             }}
           >
-            View All on Aviasales
+            View All on MakeMyTrip
             <ExternalLink className="w-4 h-4 ml-2" />
           </Button>
         </motion.div>

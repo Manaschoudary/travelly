@@ -39,110 +39,6 @@ async function getAmadeusToken(): Promise<string> {
   return cachedToken.token;
 }
 
-interface TravelpayoutsOffer {
-  origin: string;
-  destination: string;
-  origin_airport: string;
-  destination_airport: string;
-  price: number;
-  airline: string;
-  flight_number: string;
-  departure_at: string;
-  return_at: string | null;
-  transfers: number;
-  return_transfers: number;
-  duration: number;
-  duration_to: number;
-  duration_back: number;
-  link: string;
-}
-
-async function searchTravelpayouts(
-  origin: string,
-  destination: string,
-  departDate: string,
-  returnDate: string | undefined,
-  affiliateLink: string
-): Promise<Record<string, unknown>[] | null> {
-  const token = process.env.TRAVELPAYOUTS_TOKEN;
-  if (!token) return null;
-
-  const searchParams = new URLSearchParams({
-    origin,
-    destination,
-    departure_at: departDate,
-    currency: "INR",
-    limit: "10",
-    sorting: "price",
-    direct: "false",
-    one_way: returnDate ? "false" : "true",
-  });
-
-  if (returnDate) {
-    searchParams.set("return_at", returnDate);
-  }
-
-  const res = await fetch(
-    `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${searchParams}`,
-    {
-      headers: { "X-Access-Token": token },
-    }
-  );
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
-    return null;
-  }
-
-  const marker = process.env.TRAVELPAYOUTS_MARKER || "";
-
-  return data.data.map((offer: TravelpayoutsOffer, i: number) => {
-    const durationTo = offer.duration_to || offer.duration || 0;
-    const hours = Math.floor(durationTo / 60);
-    const mins = durationTo % 60;
-
-    const depDate = new Date(offer.departure_at);
-    const departTime = depDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "Asia/Kolkata",
-    });
-
-    const arrDate = new Date(depDate.getTime() + durationTo * 60000);
-    const arrivalTime = arrDate.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone: "Asia/Kolkata",
-    });
-
-    return {
-      id: `tp-${i}`,
-      airline: getAirlineName(offer.airline),
-      airlineCode: offer.airline,
-      price: offer.price,
-      currency: "INR",
-      origin: offer.origin_airport || origin,
-      destination: offer.destination_airport || destination,
-      departDate,
-      returnDate: offer.return_at || returnDate,
-      departTime,
-      arrivalTime,
-      duration: `${hours}h ${mins}m`,
-      stops: offer.transfers,
-      type: offer.transfers === 0 ? "direct" : "connecting",
-      bookingLink:
-        offer.link
-          ? `https://www.aviasales.com${offer.link}&marker=${marker}`
-          : affiliateLink,
-      isSample: false,
-    };
-  });
-}
-
 function getAirlineName(code: string): string {
   const airlines: Record<string, string> = {
     "6E": "IndiGo",
@@ -191,7 +87,7 @@ export async function POST(req: NextRequest) {
     });
 
     let flights: Record<string, unknown>[] = [];
-    let apiSource = "mock";
+    let apiSource = "sample";
 
     if (process.env.AMADEUS_CLIENT_ID && process.env.AMADEUS_CLIENT_SECRET) {
       try {
@@ -235,24 +131,6 @@ export async function POST(req: NextRequest) {
         }
       } catch (apiError) {
         console.error("Amadeus API error:", apiError);
-      }
-    }
-
-    if (flights.length === 0) {
-      try {
-        const tpFlights = await searchTravelpayouts(
-          origin,
-          destination,
-          departDate,
-          returnDate,
-          affiliateLink
-        );
-        if (tpFlights && tpFlights.length > 0) {
-          flights = tpFlights;
-          apiSource = "travelpayouts";
-        }
-      } catch (tpError) {
-        console.error("Travelpayouts API error:", tpError);
       }
     }
 

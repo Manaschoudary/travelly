@@ -80,8 +80,8 @@ function renderLineInline(text: string) {
     const label = match[1];
     const url = match[2];
     const isBooking =
-      url.includes("aviasales.com") || url.includes("hotellook.com");
-    const type = url.includes("aviasales")
+      url.includes("makemytrip.com") || url.includes("booking.com");
+    const type = url.includes("flight")
       ? ("flight" as const)
       : ("hotel" as const);
 
@@ -98,7 +98,7 @@ function renderLineInline(text: string) {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 type,
-                platform: type === "flight" ? "aviasales" : "hotellook",
+                platform: "makemytrip",
                 affiliateLink: url,
               }),
             }).catch(() => {});
@@ -822,7 +822,7 @@ export default function TripResults() {
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
                             type: isFlights ? "flight" : "hotel",
-                            platform: isFlights ? "aviasales" : "hotellook",
+                            platform: "makemytrip",
                             affiliateLink: url,
                             details: { destination: tripForm.destination },
                           }),

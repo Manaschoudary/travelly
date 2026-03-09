@@ -118,7 +118,7 @@ export default function FlightCard({ flight, index = 0 }: FlightCardProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   type: "flight",
-                  platform: flight.bookingLink.includes("aviasales") ? "aviasales" : "other",
+                  platform: "makemytrip",
                   affiliateLink: flight.bookingLink,
                   details: {
                     destination: flight.destination,

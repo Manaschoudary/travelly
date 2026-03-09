@@ -22,14 +22,14 @@ const agentIcons: Record<string, { icon: typeof Bot; label: string; color: strin
   orchestrator: { icon: Bot, label: "Travelly AI", color: "#2EC4B6" },
 };
 
-const BOOKING_DOMAINS = ["aviasales.com", "hotellook.com"];
+const BOOKING_DOMAINS = ["makemytrip.com", "booking.com"];
 
 function isBookingLink(url: string): boolean {
   return BOOKING_DOMAINS.some((d) => url.includes(d));
 }
 
 function trackClick(url: string, type: "flight" | "hotel") {
-  const platform = url.includes("aviasales") ? "aviasales" : "hotellook";
+  const platform = "makemytrip";
   fetch("/api/booking-click", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -51,7 +51,7 @@ function renderInlineContent(text: string, light: boolean) {
     const label = match[1];
     const url = match[2];
     const booking = isBookingLink(url);
-    const type = url.includes("aviasales") ? "flight" as const : "hotel" as const;
+    const type = url.includes("flight") ? "flight" as const : "hotel" as const;
 
     if (booking) {
       parts.push(

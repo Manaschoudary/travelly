@@ -1,7 +1,21 @@
-const MARKER = process.env.TRAVELPAYOUTS_MARKER || "travelly";
+const PARTNER_ID = process.env.MAKEMYTRIP_PARTNER_ID || "";
 
 // ---------------------------------------------------------------------------
-// Flight affiliate links — Aviasales (via TravelPayouts)
+// Date helper — MakeMyTrip uses dd/mm/yyyy format
+// ---------------------------------------------------------------------------
+
+function formatDateForMMT(date: string): string {
+  // Input can be ISO "2026-04-15" or already dd/mm/yyyy
+  if (date.includes("/")) return date;
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// ---------------------------------------------------------------------------
+// Flight affiliate links — MakeMyTrip (via myPartner)
 // ---------------------------------------------------------------------------
 
 interface FlightLinkParams {
@@ -10,6 +24,11 @@ interface FlightLinkParams {
   departDate: string;
   returnDate?: string;
   adults?: number;
+  children?: number;
+  infants?: number;
+  cabinClass?: "E" | "PE" | "B" | "F";
+  international?: boolean;
+  campaign?: string;
 }
 
 export function buildFlightLink({
@@ -18,20 +37,46 @@ export function buildFlightLink({
   departDate,
   returnDate,
   adults = 1,
+  children = 0,
+  infants = 0,
+  cabinClass = "E",
+  international = false,
+  campaign = "travelly-flights",
 }: FlightLinkParams): string {
+  const depFormatted = formatDateForMMT(departDate);
+  let itinerary = `${origin}-${destination}-${depFormatted}`;
+
+  const tripType = returnDate ? "R" : "O";
+  if (returnDate) {
+    const retFormatted = formatDateForMMT(returnDate);
+    itinerary += `_${destination}-${origin}-${retFormatted}`;
+  }
+
+  const paxType = `A-${adults}_C-${children}_I-${infants}`;
+
   const params = new URLSearchParams({
-    origin_iata: origin,
-    destination_iata: destination,
-    depart_date: departDate,
-    adults: String(adults),
-    marker: MARKER,
+    itinerary,
+    tripType,
+    paxType,
+    intl: String(international),
+    cabinClass,
   });
-  if (returnDate) params.set("return_date", returnDate);
-  return `https://www.aviasales.com/search?${params.toString()}`;
+
+  // Affiliate tracking
+  if (PARTNER_ID) {
+    params.set("partnerid", PARTNER_ID);
+  }
+  params.set("utm_source", "travelly-app");
+  params.set("utm_medium", "affiliate");
+  if (campaign) {
+    params.set("campaignid", campaign);
+  }
+
+  return `https://www.makemytrip.com/flight/search?${params.toString()}`;
 }
 
 // ---------------------------------------------------------------------------
-// Hotel affiliate links — Hotellook (via TravelPayouts)
+// Hotel affiliate links — MakeMyTrip
 // ---------------------------------------------------------------------------
 
 interface HotelLinkParams {
@@ -48,21 +93,33 @@ export function buildHotelLink({
   adults = 2,
 }: HotelLinkParams): string {
   const params = new URLSearchParams({
-    marker: MARKER,
-    adults: String(adults),
-    checkIn,
+    city: destination,
+    checkin: formatDateForMMT(checkIn),
+    checkout: checkOut ? formatDateForMMT(checkOut) : "",
+    roomStayQualifier: `${adults}e0e`,
   });
-  if (checkOut) params.set("checkOut", checkOut);
-  return `https://search.hotellook.com/?destination=${encodeURIComponent(destination)}&${params.toString()}`;
+
+  if (PARTNER_ID) {
+    params.set("partnerid", PARTNER_ID);
+  }
+  params.set("utm_source", "travelly-app");
+  params.set("utm_medium", "affiliate");
+  params.set("campaignid", "travelly-hotels");
+
+  return `https://www.makemytrip.com/hotels/hotel-listing/?${params.toString()}`;
 }
 
 // ---------------------------------------------------------------------------
-// Generic deep link — wrap any partner URL with TravelPayouts marker
+// Generic deep link — wrap any MakeMyTrip URL with partner tracking
 // ---------------------------------------------------------------------------
 
 export function buildPartnerLink(url: string): string {
   const u = new URL(url);
-  u.searchParams.set("marker", MARKER);
+  if (PARTNER_ID) {
+    u.searchParams.set("partnerid", PARTNER_ID);
+  }
+  u.searchParams.set("utm_source", "travelly-app");
+  u.searchParams.set("utm_medium", "affiliate");
   return u.toString();
 }
 
@@ -78,7 +135,7 @@ const HOTEL_TAG_RE =
 
 /**
  * Replace all {{BOOK_FLIGHT:...}} and {{BOOK_HOTEL:...}} tags in text with
- * real affiliate markdown links.
+ * real affiliate markdown links pointing to MakeMyTrip.
  */
 export function replaceAffiliateTags(text: string): string {
   let result = text;
@@ -91,6 +148,7 @@ export function replaceAffiliateTags(text: string): string {
         destination: dest,
         departDate: depart,
         returnDate: ret || undefined,
+        campaign: "travelly-chat",
       });
       return `[Book Flights ${origin} \u2192 ${dest}](${url})`;
     }
